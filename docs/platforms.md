@@ -9,7 +9,7 @@ available everywhere.
 | Python | Linux | macOS | Windows |
 |---|---|---|---|
 | 3.14 | CI, unit tests | not run | not run |
-| 3.15 | CI, coverage, benchmark | CI, unit tests | CI, unit tests, local demo |
+| 3.15 | CI, coverage, benchmark | CI, unit tests | CI, unit tests |
 
 The CI matrix is in `.github/workflows/ci.yml`. Linux runs the full suite with
 coverage and the benchmark gate. macOS and Windows run the portable suite. The

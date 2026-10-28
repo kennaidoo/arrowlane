@@ -93,7 +93,6 @@ def main(argv: list[str] | None = None) -> int:
     payload = {
         "schema_version": 1,
         "provenance": {
-            "host": platform.node(),
             "platform": sys.platform,
             "python": platform.python_version(),
             "pyarrow": pa.__version__,

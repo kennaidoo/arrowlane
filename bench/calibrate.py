@@ -88,7 +88,6 @@ def calibrate(payload: dict[str, Any], current: dict[str, Any]) -> dict[str, Any
         )
     fitted["shm"] = current["lanes"]["shm"]
     provenance = {
-        "host": payload["provenance"]["host"],
         "platform": payload["provenance"]["platform"],
         "python": payload["provenance"]["python"],
         "pyarrow": payload["provenance"]["pyarrow"],

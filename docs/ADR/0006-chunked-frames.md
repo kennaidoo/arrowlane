@@ -4,8 +4,8 @@ Status: accepted.
 
 ## Context
 
-A whole frame holds the encoded payload and the joined frame at once. On the
-calibration host, the JSON lane peaked at 277.72 MB of Python allocation for a
+A whole frame holds the encoded payload and the joined frame at once. At
+calibration time, the JSON lane peaked at 277.72 MB of Python allocation for a
 500,000 row table whose wire size was 34.96 MB. The IPC lane peaked at 26.13 MB
 for a 13.06 MB wire. A single frame also has a 512 MiB payload cap, so a large
 table cannot always use the simple path.

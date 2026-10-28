@@ -10,7 +10,7 @@ readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.14"
-authors = [{ name = "Kennedy Naidoo", email = "kennynaidoo@outlook.com" }]
+authors = [{ name = "Kennedy Naidoo" }]
 keywords = ["arrow", "data-transit", "ipc", "zstd", "shared-memory", "sidecar", "asgi"]
 classifiers = [
     "Development Status :: 3 - Alpha",

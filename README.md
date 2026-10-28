@@ -88,13 +88,13 @@ Peak Python allocation for a 500,000 row table:
 | `ipc-zstd` | 5.79 MB | 26.18 MB | 1.95 MB |
 
 Measured with `python bench/memory_probe.py --rows 500000 --chunk-rows 25000`
-on benchmark-host, Windows 11, Python 3.15.1, pyarrow 26.0.0. Peak is Python
-allocation from `tracemalloc`, not process RSS.
+on CPython 3.15.1 with pyarrow 26.0.0. Peak is Python allocation from
+`tracemalloc`, not process RSS.
 
 ## Measured model
 
-The shipped coefficients were measured on benchmark-host, Windows 11, Python
-3.15.1 and pyarrow 26.0.0, on four shapes from 1,000 to 500,000 rows and eight
+The shipped coefficients were measured on CPython 3.15.1 with pyarrow 26.0.0,
+on four shapes from 1,000 to 500,000 rows and eight
 column types, median of three runs.
 
 | Lane | Fixed ms | Encode ms/MB | Decode ms/MB | Wire ratio |
@@ -104,8 +104,8 @@ column types, median of three runs.
 | `ipc-zstd` | 8.095 | 2.250 | 1.281 | 0.312 |
 
 The fixed terms are a floor: the larger of the fitted intercept and the earlier
-seed estimate. The network terms are estimates, not measurements. On the
-calibration host, the model predicts the largest shape within 0.5 percent and
+seed estimate. The network terms are estimates, not measurements. At calibration
+time, the model predicts the largest shape within 0.5 percent and
 the middle shapes within 69 percent, because the JSON cost changes with cache
 residency. The selector falls back to JSON when the predicted gain is under 10
 percent. `bench/calibrate.py` records every residual in the model provenance.
