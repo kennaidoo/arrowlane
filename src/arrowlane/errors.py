@@ -41,6 +41,10 @@ class BadHeader(FrameError):
     """The frame header is not valid JSON or carries no schema."""
 
 
+class ChunkError(ArrowLaneError):
+    """A chunk stream is malformed, incomplete or out of order."""
+
+
 class LaneUnavailable(ArrowLaneError):
     """The lane exists but this platform or directory cannot serve it."""
 

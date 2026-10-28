@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import struct
 import tracemalloc
 import zlib
@@ -13,6 +14,7 @@ from arrowlane.errors import (
     BadHeader,
     BadMagic,
     ChecksumMismatch,
+    ChunkError,
     OversizeFrame,
     TruncatedFrame,
     UnknownLane,
@@ -25,11 +27,15 @@ from arrowlane.frame import (
     MAX_PAYLOAD_BYTES,
     MAX_UNCOMPRESSED_BYTES,
     VERSION,
+    ChunkInfo,
     Frame,
     decode_frame,
     encode_frame,
+    encode_frame_parts,
     header_for,
+    read_frame,
     schema_of,
+    write_frame,
 )
 from arrowlane.version import __version__
 
@@ -194,3 +200,79 @@ def test_uncompressed_over_cap_is_rejected() -> None:
 def test_header_must_be_an_object() -> None:
     with pytest.raises(BadHeader):
         decode_frame(raw_frame(b"[]", b"x"))
+
+
+def test_chunk_metadata_roundtrip() -> None:
+    info = ChunkInfo(id="a" * 32, index=2, last=True)
+    frame = Frame(2, b"hello", 3, 5, {"k": "v"}, chunk=info)
+    out = decode_frame(encode_frame(frame))
+    assert out.chunk == info
+    assert out.header["chunk"] == {"id": "a" * 32, "index": 2, "last": True}
+
+
+def test_chunk_info_rejects_bad_values() -> None:
+    with pytest.raises(ChunkError):
+        ChunkInfo(id="short", index=0, last=False)
+    with pytest.raises(ChunkError):
+        ChunkInfo(id="a" * 32, index=-1, last=False)
+    with pytest.raises(ChunkError):
+        ChunkInfo(id="a" * 32, index=True, last=False)
+    with pytest.raises(ChunkError):
+        ChunkInfo(id="a" * 32, index=0, last=1)  # type: ignore[arg-type]
+    with pytest.raises(ChunkError):
+        ChunkInfo.from_header({"id": "a" * 32, "index": 0})
+
+
+def test_bad_chunk_header_is_rejected() -> None:
+    frame = Frame(2, b"x", 0, 1, {"chunk": {"id": "bad", "index": 0, "last": True}})
+    with pytest.raises(BadHeader):
+        decode_frame(encode_frame(frame))
+
+
+def test_frame_parts_match_the_joined_frame() -> None:
+    frame = Frame(2, b"payload", 1, 7, {"k": "v"}, chunk=ChunkInfo("a" * 32, 0, True))
+    prefix, header, payload = encode_frame_parts(frame)
+    assert prefix + header + payload == encode_frame(frame)
+
+
+def test_write_frame_matches_encode_frame() -> None:
+    frame = Frame(2, b"payload", 1, 7, {"k": "v"})
+    buffer = io.BytesIO()
+    assert write_frame(buffer, frame) == len(encode_frame(frame))
+    assert buffer.getvalue() == encode_frame(frame)
+
+
+def test_read_frame_returns_none_at_a_clean_end() -> None:
+    assert read_frame(io.BytesIO()) is None
+
+
+def test_read_frame_reads_two_frames() -> None:
+    frames = [Frame(2, b"one", 1, 3, {}), Frame(2, b"two", 1, 3, {})]
+    buffer = io.BytesIO()
+    for frame in frames:
+        write_frame(buffer, frame)
+    buffer.seek(0)
+    first = read_frame(buffer)
+    second = read_frame(buffer)
+    assert first is not None
+    assert first.payload == b"one"
+    assert second is not None
+    assert second.payload == b"two"
+    assert read_frame(buffer) is None
+
+
+def test_read_frame_rejects_a_truncated_prefix() -> None:
+    with pytest.raises(TruncatedFrame):
+        read_frame(io.BytesIO(b"A"))
+
+
+def test_read_frame_rejects_a_truncated_header() -> None:
+    data = encode_frame(Frame(2, b"x", 0, 1, {"k": "v"}))
+    with pytest.raises(TruncatedFrame):
+        read_frame(io.BytesIO(data[: HEADER_SIZE + 1]))
+
+
+def test_read_frame_rejects_a_truncated_payload() -> None:
+    data = encode_frame(Frame(2, b"payload", 1, 7, {}))
+    with pytest.raises(TruncatedFrame):
+        read_frame(io.BytesIO(data[:-1]))

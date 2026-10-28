@@ -3,6 +3,22 @@
 All notable changes to this project are recorded here. The format follows
 Keep a Changelog, and the project uses semantic versioning.
 
+## 0.3.0 - 2026-10-28
+
+### Added
+
+- Chunked frames with `id`, `index` and `last` metadata.
+- `pack_chunks`, `unpack_chunks`, `assemble_chunks` and `transit_chunks`.
+- `write_chunks` and `read_chunks` for binary streams.
+- `write_frame` and `read_frame` for frame streams without a join copy.
+- `ChunkInfo`, `ChunkError` and adaptive chunk splitting.
+- `bench/memory_probe.py` and `docs/platforms.md`.
+
+### Changed
+
+- Large tables stream in bounded chunks. The producer encodes one chunk at a
+  time, so peak allocation follows the chunk size, not the table size.
+
 ## 0.2.0 - 2026-10-28
 
 ### Added

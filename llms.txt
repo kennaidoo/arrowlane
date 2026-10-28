@@ -9,8 +9,14 @@
 - [docs/ai/quickstart.md](docs/ai/quickstart.md): install and first call.
 - [docs/ai/api.md](docs/ai/api.md): signatures, errors and limits.
 - [docs/ai/recipes.md](docs/ai/recipes.md): integration patterns.
+- [docs/platforms.md](docs/platforms.md): tested platforms and lane availability.
 - [README.md](README.md): product overview.
 - [docs/ADR](docs/ADR): design decisions.
+
+## Streaming
+
+- `arrowlane.pack_chunks` is lazy. One chunk is in flight.
+- `write_chunks` and `read_chunks` avoid the join copy.
 
 ## Commands
 

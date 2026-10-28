@@ -25,6 +25,12 @@ def test_manifest_paths_exist() -> None:
         assert (ROOT / path).exists(), path
 
 
+def test_manifest_declares_chunk_streaming() -> None:
+    manifest = json.loads((ROOT / "docs/ai/manifest.json").read_text(encoding="utf-8"))
+    assert manifest["streaming"]["chunked"] is True
+    assert manifest["streaming"]["default_chunk_rows"] == 50_000
+
+
 def test_agent_docs_have_no_em_dash() -> None:
     paths = [ROOT / "llms.txt", *sorted((ROOT / "docs/ai").glob("*.md"))]
     for path in paths:

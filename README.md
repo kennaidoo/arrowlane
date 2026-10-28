@@ -21,10 +21,11 @@ print(decision.lane, len(wire), rows)
 
 ## What it does
 
-arrowlane moves a `pyarrow.Table` between processes as one frame. It chooses a
-physical lane, encodes the table, validates the frame on arrival, and returns a
-table whose buffers are safe to read. The frame carries its lane id, row count,
-uncompressed length, CRC32 and Arrow schema, so a reader needs no side channel.
+arrowlane moves a `pyarrow.Table` between processes as one frame, or as an
+ordered stream of chunks for a large table. It chooses a physical lane, encodes
+the table, validates the frame on arrival, and returns a table whose buffers are
+safe to read. The frame carries its lane id, row count, uncompressed length,
+CRC32 and Arrow schema, so a reader needs no side channel.
 
 ## Lanes
 
@@ -43,9 +44,52 @@ uncompressed length, CRC32 and Arrow schema, so a reader needs no side channel.
 | `pack(table, lane=...)` | Encode one table on one lane |
 | `unpack(data, token=...)` | Validate and decode a frame |
 | `transit(table, topology=...)` | Plan, pack and return the decision |
+| `pack_chunks(table, lane=..., rows_per_chunk=...)` | Yield one frame per chunk |
+| `write_chunks(stream, table, ...)` | Write a chunk stream without joining the payload |
+| `read_chunks(stream)` | Read a chunk stream and yield one batch per chunk |
+| `assemble_chunks(frames)` | Rebuild one table from a chunk stream |
+| `transit_chunks(table, topology=...)` | Plan and return a lazy chunk iterator |
 
 `transit` never plans the `shm` lane without a token, because it cannot open a
 segment it did not create.
+
+`pack_chunks` is lazy. It encodes chunk n+1 only when the consumer calls
+`next()`. A blocking write or a bounded queue therefore applies backpressure.
+
+## Large tables
+
+A whole frame holds the payload and the frame at once. A chunk stream holds one
+chunk at a time. Each chunk is a complete frame with `id`, `index` and `last`
+metadata. A chunk that exceeds `max_payload` is split in half until it fits.
+
+```python
+import pyarrow as pa
+
+import arrowlane
+from arrowlane.chunks import DEFAULT_CHUNK_ROWS
+
+table = pa.table({"id": list(range(1_000_000))})
+stream, decision = arrowlane.transit_chunks(table, topology="same_network")
+with open("chunks.aln", "wb") as handle:
+    for wire in stream:
+        handle.write(wire)
+
+with open("chunks.aln", "rb") as handle:
+    for batch in arrowlane.read_chunks(handle):
+        assert batch.num_rows <= DEFAULT_CHUNK_ROWS
+```
+
+Peak Python allocation for a 500,000 row table:
+
+| Lane | Wire | One frame | 25,000 row chunks |
+|---|---|---|---|
+| `json` | 34.96 MB | 277.72 MB | 17.43 MB |
+| `ipc` | 13.06 MB | 26.13 MB | 1.97 MB |
+| `ipc-zstd` | 5.79 MB | 26.18 MB | 1.95 MB |
+
+Measured with `python bench/memory_probe.py --rows 500000 --chunk-rows 25000`
+on benchmark-host, Windows 11, Python 3.15.1, pyarrow 26.0.0. Peak is Python
+allocation from `tracemalloc`, not process RSS.
 
 ## Measured model
 
@@ -111,7 +155,10 @@ through a one-shot `chown` init container.
 
 ## Platform support
 
-The portable lanes run on Linux, macOS and Windows. The `shm` lane needs POSIX.
+Python 3.14 or newer. The portable lanes run on Linux, macOS and Windows. The
+`shm` lane is POSIX only. macOS needs `ARROWLAND_SHM_DIR` and a memory backed
+directory. Windows cannot use the lane. The tested matrix, the lane table and
+the live check commands are in [docs/platforms.md](docs/platforms.md).
 Coverage is enforced on Linux, where the shared memory tests run.
 
 ## Status

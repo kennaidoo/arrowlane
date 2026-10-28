@@ -78,7 +78,32 @@ decision = arrowlane.plan(table, topology="wide_area")
 print(decision.as_dict())
 ```
 
-## 5. Discover the capability manifest from a build
+## 5. Large table as a chunk stream
+
+```python
+import pathlib
+
+import pyarrow as pa
+
+import arrowlane
+
+table = pa.table({"id": list(range(1_000_000))})
+with pathlib.Path("chunks.aln").open("wb") as stream:
+    chunks, size = arrowlane.write_chunks(stream, table, lane="ipc", rows_per_chunk=50_000)
+print(chunks, size)
+
+with pathlib.Path("chunks.aln").open("rb") as stream:
+    for batch in arrowlane.read_chunks(stream):
+        assert batch.num_rows <= 50_000
+```
+
+`write_chunks` and `read_chunks` use `write_frame` and `read_frame`, so the
+payload is never joined into one buffer. `pack_chunks` is lazy. A bounded queue
+applies backpressure: `queue.Queue(maxsize=1)` blocks `put` until the consumer
+takes the previous chunk. Keep the consumer on one stream so the order checks
+run.
+
+## 6. Discover the capability manifest from a build
 
 ```python
 import json

@@ -27,7 +27,8 @@ uv pip install -e ".[dev,server]"
 
 | Path | What |
 |---|---|
-| `src/arrowlane/frame.py` | Wire frame, caps, CRC, schema |
+| `src/arrowlane/frame.py` | Wire frame, caps, CRC, schema, frame streams |
+| `src/arrowlane/chunks.py` | Chunked frames, lazy producer, ordered consumer |
 | `src/arrowlane/transit.py` | `plan`, `pack`, `unpack`, `transit` |
 | `src/arrowlane/lanes/` | One module per physical lane |
 | `src/arrowlane/select.py` | Lane choice from the cost model |
@@ -44,6 +45,8 @@ uv pip install -e ".[dev,server]"
 - Check every length cap before allocating.
 - Check the CRC before copying the payload.
 - Compare the header schema with the payload schema.
+- A chunk stream keeps one id, contiguous indexes and exactly one last chunk.
+- `pack_chunks` is lazy. One chunk is in flight.
 - Never plan the `shm` lane without a token.
 - Never print from `src` except `cli.py`.
 - Never renumber a lane id. Add a new id.
@@ -83,6 +86,9 @@ Commit the model, `bench/baseline.json` and any test changes together.
 - `docs/ai/manifest.json` is generated from `describe()` and tested for equality.
 - `docs/ai/quickstart.md`, `docs/ai/api.md` and `docs/ai/recipes.md` are the
   integration references. Their Python blocks are compiled by the test suite.
+- `pack_chunks` and `read_chunks` are the large table path. `write_chunks` and
+  `read_chunks` avoid the join copy for binary streams.
+- `docs/platforms.md` lists the tested matrix and lane availability.
 - `llms.txt` lists the same entry points for retrieval tools.
 
 ## Watermarks

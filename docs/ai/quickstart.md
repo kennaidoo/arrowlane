@@ -57,8 +57,14 @@ app = Starlette(routes=[Route("/table", table)])
 arrowlane describe --indent 0
 ```
 
-The same data is in `docs/ai/manifest.json`. Both come from
-`arrowlane.describe.describe()`, and the test suite checks that they match.
+The same data is in `docs/ai/manifest.json`. Both come from the `describe()`
+function in `arrowlane.describe`, and the test suite checks that they match.
+
+## Large table
+
+Use `pack_chunks` or `write_chunks`. One chunk is in flight, so a slow consumer
+slows the producer. See `docs/ai/api.md` for the signatures and
+`docs/ai/recipes.md` for a file stream.
 
 ## Next
 

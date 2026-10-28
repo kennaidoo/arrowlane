@@ -8,6 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /srv
 COPY pyproject.toml uv.lock README.md LICENSE llms.txt ./
 COPY docs/ai ./docs/ai
+COPY docs/platforms.md ./docs/platforms.md
 COPY src ./src
 COPY demo ./demo
 RUN pip install --no-cache-dir ".[server]"

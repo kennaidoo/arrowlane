@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "package": "arrowlane",
-  "package_version": "0.2.0",
+  "package_version": "0.3.0",
   "source": "arrowlane",
   "python_requires": ">=3.14",
   "install": {
@@ -17,6 +17,7 @@
   },
   "entrypoints": {
     "transit": "arrowlane.transit",
+    "chunks": "arrowlane.chunks",
     "describe": "arrowlane describe",
     "cli": "arrowlane.cli:main"
   },
@@ -52,18 +53,27 @@
     "max_uncompressed_bytes": 1073741824,
     "max_segment_bytes": 536870912
   },
+  "streaming": {
+    "chunked": true,
+    "default_chunk_rows": 50000,
+    "max_chunk_rows": 10000000,
+    "max_chunks": 1000000,
+    "backpressure": "lazy iterator, one chunk in flight"
+  },
   "docs": {
     "agents": "docs/ai/operating-guide.md",
     "llms": "llms.txt",
     "quickstart": "docs/ai/quickstart.md",
     "api": "docs/ai/api.md",
     "recipes": "docs/ai/recipes.md",
+    "platforms": "docs/platforms.md",
     "decisions": "docs/ADR"
   },
   "checks": {
     "gate": "bash scripts/gate.sh",
     "tests": "python -m pytest -q",
     "bench": "python bench/verify.py",
+    "memory": "python bench/memory_probe.py",
     "demo": "bash demo/verify.sh"
   }
 }

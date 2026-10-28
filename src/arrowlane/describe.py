@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from .frame import MAX_HEADER_BYTES, MAX_PAYLOAD_BYTES, MAX_UNCOMPRESSED_BYTES
+from .chunks import DEFAULT_CHUNK_ROWS, MAX_CHUNK_ROWS
+from .frame import MAX_CHUNKS, MAX_HEADER_BYTES, MAX_PAYLOAD_BYTES, MAX_UNCOMPRESSED_BYTES
 from .lanes import get_lane, lane_names
 from .shm import MAX_SEGMENT_BYTES
 from .version import __version__
@@ -33,6 +34,7 @@ def describe() -> dict[str, object]:
         },
         "entrypoints": {
             "transit": "arrowlane.transit",
+            "chunks": "arrowlane.chunks",
             "describe": "arrowlane describe",
             "cli": "arrowlane.cli:main",
         },
@@ -43,18 +45,27 @@ def describe() -> dict[str, object]:
             "max_uncompressed_bytes": MAX_UNCOMPRESSED_BYTES,
             "max_segment_bytes": MAX_SEGMENT_BYTES,
         },
+        "streaming": {
+            "chunked": True,
+            "default_chunk_rows": DEFAULT_CHUNK_ROWS,
+            "max_chunk_rows": MAX_CHUNK_ROWS,
+            "max_chunks": MAX_CHUNKS,
+            "backpressure": "lazy iterator, one chunk in flight",
+        },
         "docs": {
             "agents": "docs/ai/operating-guide.md",
             "llms": "llms.txt",
             "quickstart": "docs/ai/quickstart.md",
             "api": "docs/ai/api.md",
             "recipes": "docs/ai/recipes.md",
+            "platforms": "docs/platforms.md",
             "decisions": "docs/ADR",
         },
         "checks": {
             "gate": "bash scripts/gate.sh",
             "tests": "python -m pytest -q",
             "bench": "python bench/verify.py",
+            "memory": "python bench/memory_probe.py",
             "demo": "bash demo/verify.sh",
         },
     }
