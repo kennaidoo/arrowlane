@@ -13,10 +13,11 @@ requires-python = ">=3.14"
 authors = [{ name = "Kennedy Naidoo", email = "kennynaidoo@outlook.com" }]
 keywords = ["arrow", "data-transit", "ipc", "zstd", "shared-memory", "sidecar", "asgi"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Web Environment",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3.15",

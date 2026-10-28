@@ -2,4 +2,4 @@
 
 Columnar data lanes for ingress and egress in containerized Python apps.
 
-Status: pre-release. The full README lands in Phase 9.
+Status: Alpha. The API may change. Python 3.14 or newer.

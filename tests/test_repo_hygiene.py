@@ -28,7 +28,9 @@ def test_workflows_are_valid_yaml() -> None:
 
 def test_no_em_dash() -> None:
     offenders = []
-    for path in list(ROOT.glob("*.md")) + list((ROOT / "docs").rglob("*.md")):
+    skip = {".venv", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".git"}
+    paths = [path for path in ROOT.rglob("*.md") if not (set(path.parts) & skip)]
+    for path in paths:
         for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
             if "\u2014" in line:
                 offenders.append(f"{path.relative_to(ROOT)}:{number}")
@@ -42,3 +44,25 @@ def test_library_does_not_print() -> None:
         if "print(" in path.read_text(encoding="utf-8") and path.name != "cli.py"
     ]
     assert not offenders, offenders
+
+
+def test_package_metadata_is_honest() -> None:
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    classifiers = data["project"]["classifiers"]
+    assert "Development Status :: 3 - Alpha" in classifiers
+    assert "Development Status :: 4 - Beta" not in classifiers
+    assert "Operating System :: POSIX :: Linux" in classifiers
+    assert "Operating System :: Microsoft :: Windows" in classifiers
+    assert "Operating System :: MacOS" in classifiers
+    assert "Environment :: Web Environment" not in classifiers
+    assert (ROOT / "CHANGELOG.md").is_file()
+
+
+def test_document_urls_point_at_real_files() -> None:
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    for name, url in data["project"]["urls"].items():
+        if name == "Homepage":
+            continue
+        tail = url.rsplit("/", 1)[-1]
+        if tail.endswith(".md"):
+            assert (ROOT / tail).is_file(), f"{name} points at missing {tail}"
