@@ -18,7 +18,7 @@ from arrowlane.table import estimate_bytes
 
 ROWS = 100_000
 REPEATS = 3
-MAX_MODEL_ERROR = 0.25
+MAX_WIRE_ERROR = 0.10
 
 
 def build(rows: int) -> pa.Table:
@@ -69,7 +69,6 @@ def main(argv: list[str] | None = None) -> int:
     arrow_bytes = estimate_bytes(table)
     measured = {name: measure(name, table) for name in ("json", "ipc", "ipc-zstd")}
     model = load_default()
-    mb = arrow_bytes / 1e6
     fast = "json" if args.force_json else "ipc"
     checks = [
         ("ipc-bytes-smaller-than-json", measured["ipc"]["bytes"] < measured["json"]["bytes"]),
@@ -77,9 +76,10 @@ def main(argv: list[str] | None = None) -> int:
         (f"{fast}-faster-than-json", measured[fast]["ms"] < measured["json"]["ms"]),
     ]
     for name in ("ipc", "ipc-zstd"):
-        predicted = model.predict(name, mb=mb, topology="same_network", policy="cpu")
-        error = abs(predicted - measured[name]["ms"]) / measured[name]["ms"]
-        checks.append((f"{name}-model-error-within-25-percent", error <= MAX_MODEL_ERROR))
+        measured_ratio = measured[name]["bytes"] / arrow_bytes
+        predicted_ratio = model.lane_cost(name).ratio
+        error = abs(measured_ratio - predicted_ratio) / predicted_ratio
+        checks.append((f"{name}-wire-ratio-within-10-percent", error <= MAX_WIRE_ERROR))
     failed = 0
     for name, ok in checks:
         print(f"CHECK {name} {'PASS' if ok else 'FAIL'}")

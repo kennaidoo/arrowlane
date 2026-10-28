@@ -60,11 +60,13 @@ column types, median of three runs.
 | `ipc-zstd` | 8.095 | 2.250 | 1.281 | 0.312 |
 
 The fixed terms are a floor: the larger of the fitted intercept and the earlier
-seed estimate. The network terms are estimates, not measurements. The model
-predicts the largest shape within 0.5 percent and the middle shapes within 69
-percent, because the JSON cost changes with cache residency. The selector falls
-back to JSON when the predicted gain is under 10 percent. `bench/calibrate.py`
-records every residual in the model provenance.
+seed estimate. The network terms are estimates, not measurements. On the
+calibration host, the model predicts the largest shape within 0.5 percent and
+the middle shapes within 69 percent, because the JSON cost changes with cache
+residency. The selector falls back to JSON when the predicted gain is under 10
+percent. `bench/calibrate.py` records every residual in the model provenance.
+The CI gate checks wire ratios and lane ordering, so it survives a different
+runner.
 
 Recalibrate on a new host:
 
