@@ -23,7 +23,8 @@ def test_every_lane_roundtrips(table: pa.Table) -> None:
         assert arrowlane.unpack(wire).equals(table), name
 
 
-def test_transit_uses_the_planned_lane(table: pa.Table) -> None:
+def test_transit_uses_the_planned_lane() -> None:
+    table = pa.table({"a": list(range(200_000)), "b": ["x"] * 200_000})
     wire, decision = arrowlane.transit(table, topology="wide_area")
     assert decision.lane == "ipc-zstd"
     assert wire[4] == 1, "frame version"

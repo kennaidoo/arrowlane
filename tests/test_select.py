@@ -43,10 +43,25 @@ def test_lan_chooses_ipc() -> None:
     assert pick(topology=Topology.SAME_NETWORK).lane == "ipc"
 
 
-def test_tiny_payload_falls_back_to_json() -> None:
-    decision = pick(TINY)
-    assert decision.lane == "json"
-    assert decision.reason == "GAIN_TOO_SMALL"
+def test_small_gain_falls_back_to_json() -> None:
+    lanes = {
+        "json": LaneCost(0.05, 1.0, 1.0, 2.0),
+        "ipc": LaneCost(0.05, 1.0, 1.0, 1.0),
+        "ipc-zstd": LaneCost(0.05, 1.0, 1.0, 0.5),
+        "shm": LaneCost(0.05, 1.0, 1.0, 0.0),
+    }
+    model: CostModel = dataclasses.replace(
+        MODEL,
+        lanes=lanes,
+        wire_us_per_mb={"same_host": 0.0, "same_network": 0.0, "wide_area": 0.0},
+    )
+    decision = select_plan(
+        TINY,
+        topology=Topology.SAME_HOST,
+        model=model,
+        allowed=("json", "ipc"),
+    )
+    assert (decision.lane, decision.reason) == ("json", "GAIN_TOO_SMALL")
 
 
 def test_empty_table_falls_back_to_json() -> None:

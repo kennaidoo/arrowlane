@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "host": "benchmark-host",
+    "platform": "win32",
+    "python": "3.15.1",
+    "pyarrow": "26.0.0",
+    "commit": "ae15ce05dfd913850aa404d3251282b140492105",
+    "measured_at": "2026-10-28T13:43:45+00:00",
+    "command": "python bench/probes/codec_probe.py",
+    "shapes": [
+      1000,
+      10000,
+      100000,
+      500000
+    ],
+    "repeats": 3
+  },
+  "records": [
+    {
+      "rows": 1000,
+      "lane": "json",
+      "arrow_bytes": 62125,
+      "wire_bytes": 159626,
+      "enc_ms": 8.630000000266591,
+      "dec_ms": 5.8891999979096
+    },
+    {
+      "rows": 1000,
+      "lane": "ipc",
+      "arrow_bytes": 62125,
+      "wire_bytes": 63168,
+      "enc_ms": 0.04059999992023222,
+      "dec_ms": 0.044699998397845775
+    },
+    {
+      "rows": 1000,
+      "lane": "ipc-zstd",
+      "arrow_bytes": 62125,
+      "wire_bytes": 22131,
+      "enc_ms": 0.410699998610653,
+      "dec_ms": 6.811400002334267
+    },
+    {
+      "rows": 10000,
+      "lane": "json",
+      "arrow_bytes": 621250,
+      "wire_bytes": 1606268,
+      "enc_ms": 78.38249999986147,
+      "dec_ms": 55.16390000047977
+    },
+    {
+      "rows": 10000,
+      "lane": "ipc",
+      "arrow_bytes": 621250,
+      "wire_bytes": 622296,
+      "enc_ms": 0.1038999980664812,
+      "dec_ms": 0.04289999924367294
+    },
+    {
+      "rows": 10000,
+      "lane": "ipc-zstd",
+      "arrow_bytes": 621250,
+      "wire_bytes": 198044,
+      "enc_ms": 2.090699999826029,
+      "dec_ms": 7.152800000767456
+    },
+    {
+      "rows": 100000,
+      "lane": "json",
+      "arrow_bytes": 6212500,
+      "wire_bytes": 16162962,
+      "enc_ms": 1128.9255999981833,
+      "dec_ms": 868.2011999990209
+    },
+    {
+      "rows": 100000,
+      "lane": "ipc",
+      "arrow_bytes": 6212500,
+      "wire_bytes": 6213544,
+      "enc_ms": 1.7924999992828816,
+      "dec_ms": 0.07449999975506216
+    },
+    {
+      "rows": 100000,
+      "lane": "ipc-zstd",
+      "arrow_bytes": 6212500,
+      "wire_bytes": 1971548,
+      "enc_ms": 16.987700000754558,
+      "dec_ms": 15.682600002037361
+    },
+    {
+      "rows": 500000,
+      "lane": "json",
+      "arrow_bytes": 31062500,
+      "wire_bytes": 81257781,
+      "enc_ms": 6151.90050000092,
+      "dec_ms": 4743.994699998439
+    },
+    {
+      "rows": 500000,
+      "lane": "ipc",
+      "arrow_bytes": 31062500,
+      "wire_bytes": 31063544,
+      "enc_ms": 9.391399999003625,
+      "dec_ms": 0.11470000026747584
+    },
+    {
+      "rows": 500000,
+      "lane": "ipc-zstd",
+      "arrow_bytes": 31062500,
+      "wire_bytes": 9679105,
+      "enc_ms": 70.75019999683718,
+      "dec_ms": 46.50989999936428
+    }
+  ]
+}

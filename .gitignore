@@ -10,4 +10,5 @@ build/
 demo/results.json
 .coverage
 coverage.xml
+bench/results/
 .DS_Store

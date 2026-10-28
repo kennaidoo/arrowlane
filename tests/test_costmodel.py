@@ -92,7 +92,8 @@ def test_wrong_schema_version_is_rejected(tmp_path: Path) -> None:
 def test_default_model_loads() -> None:
     model = load_default()
     assert set(model.lanes) == {"json", "ipc", "ipc-zstd", "shm"}
-    assert model.provenance["source"] in {"seed", "bench"}
+    assert model.provenance["source"] == "bench"
+    assert model.provenance["wire_source"] == "estimate"
 
 
 def test_non_json_model_is_rejected(tmp_path: Path) -> None:
