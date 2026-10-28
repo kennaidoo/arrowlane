@@ -208,8 +208,14 @@ def read_segment(
         mapping = mmap.mmap(fd, 0, access=mmap.ACCESS_READ)
     finally:
         os.close(fd)
-    view = memoryview(mapping)[descriptor.offset : descriptor.offset + descriptor.length]
-    if verify and (zlib.crc32(view) & 0xFFFFFFFF) != descriptor.crc32:
+    window = memoryview(mapping)
+    try:
+        view = window[descriptor.offset : descriptor.offset + descriptor.length]
+        matched = (zlib.crc32(view) & 0xFFFFFFFF) == descriptor.crc32
+        view.release()
+    finally:
+        window.release()
+    if verify and not matched:
         mapping.close()
         _unlink(path)
         raise ChecksumMismatch("segment payload does not match its CRC")
