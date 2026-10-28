@@ -4,7 +4,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /srv
-COPY pyproject.toml uv.lock README.md LICENSE ./
+COPY pyproject.toml uv.lock README.md LICENSE llms.txt ./
+COPY docs/ai ./docs/ai
 COPY src ./src
 RUN pip install --no-cache-dir .
 COPY demo/client/main.py /srv/client.py
