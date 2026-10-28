@@ -39,6 +39,7 @@ dev = [
     "pytest-cov>=6.0",
     "pytest-timeout>=2.3",
     "httpx>=0.28",
+    "hypothesis>=6.170",
     "numpy>=2",
     "mypy>=1.13",
     "ruff>=0.9",
