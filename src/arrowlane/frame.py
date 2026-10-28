@@ -24,6 +24,7 @@ from .errors import (
     UnknownLane,
     UnsupportedVersion,
 )
+from .version import __version__
 
 MAGIC: Final = b"ALN1"
 VERSION: Final = 1
@@ -62,9 +63,14 @@ class Frame:
 
 
 def header_for(table: pa.Table, **extra: Any) -> dict[str, Any]:
-    """Build a frame header that carries the Arrow schema."""
+    """Build a frame header that carries the Arrow schema and a producer mark."""
     schema = base64.b64encode(table.schema.serialize().to_pybytes()).decode("ascii")
-    return {"schema": schema, "ncols": table.num_columns, **extra}
+    return {
+        "schema": schema,
+        "ncols": table.num_columns,
+        "producer": f"arrowlane/{__version__}",
+        **extra,
+    }
 
 
 def schema_of(header: dict[str, Any]) -> pa.Schema:

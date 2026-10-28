@@ -4,8 +4,8 @@ from .frame import Frame, decode_frame, encode_frame
 from .select import Decision, Policy, Topology, Workload
 from .table import to_table
 from .transit import pack, plan, transit, unpack
+from .version import __version__
 
-__version__ = "0.1.0"
 __all__ = [
     "Decision",
     "Frame",

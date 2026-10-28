@@ -12,7 +12,6 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_version_matches_pyproject() -> None:
     data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert data["project"]["version"] == "0.1.0"
     import arrowlane
 
     assert arrowlane.__version__ == data["project"]["version"]

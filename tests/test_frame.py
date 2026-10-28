@@ -31,6 +31,7 @@ from arrowlane.frame import (
     header_for,
     schema_of,
 )
+from arrowlane.version import __version__
 
 
 @pytest.fixture
@@ -111,6 +112,11 @@ def test_bad_header_json() -> None:
 def test_schema_roundtrip(table: pa.Table) -> None:
     header = header_for(table, media_type="application/vnd.apache.arrow.stream")
     assert schema_of(header).equals(table.schema)
+
+
+def test_header_carries_a_producer_watermark(table: pa.Table) -> None:
+    header = header_for(table)
+    assert header["producer"] == f"arrowlane/{__version__}"
 
 
 def test_corrupt_frame_is_rejected_before_the_copy() -> None:

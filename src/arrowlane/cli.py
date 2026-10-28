@@ -9,6 +9,7 @@ from collections.abc import Sequence
 
 from . import __version__
 from .costmodel import load, load_default
+from .describe import describe
 from .errors import ArrowLaneError
 from .select import Topology, Workload, select_plan
 
@@ -27,12 +28,20 @@ def _build() -> argparse.ArgumentParser:
     select.add_argument("--shm-ready", action="store_true")
     select.add_argument("--model", default=None, help="path to a cost model JSON file")
     select.add_argument("--json", action="store_true", dest="as_json")
+
+    describe_parser = sub.add_parser(
+        "describe", help="print the machine-readable capability manifest"
+    )
+    describe_parser.add_argument("--indent", type=int, default=2)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Run one CLI command and return the exit code."""
     args = _build().parse_args(argv)
+    if args.command == "describe":
+        print(json.dumps(describe(), indent=args.indent))
+        return 0
     try:
         model = load(args.model) if args.model else load_default()
         allowed = (

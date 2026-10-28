@@ -56,3 +56,13 @@ def test_allowlist_spaces_are_trimmed(capsys: pytest.CaptureFixture[str]) -> Non
     code = main(["select", "--rows", "200000", "--bytes", "13380000", "--allow", "json, ipc"])
     assert code == 0
     assert "lane=" in capsys.readouterr().out
+
+
+def test_describe_is_json(capsys: pytest.CaptureFixture[str]) -> None:
+    from arrowlane.version import __version__
+
+    code = main(["describe"])
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload["package_version"] == __version__
+    assert {lane["name"] for lane in payload["lanes"]} == {"json", "ipc", "ipc-zstd", "shm"}

@@ -1,0 +1,20 @@
+# arrowlane
+
+> Columnar data lanes for ingress and egress in containerized Python apps. Python 3.14 or newer.
+
+## Start here
+
+- [docs/ai/operating-guide.md](docs/ai/operating-guide.md): operating guide for coding agents.
+- [docs/ai/manifest.json](docs/ai/manifest.json): machine-readable capabilities and limits.
+- [docs/ai/quickstart.md](docs/ai/quickstart.md): install and first call.
+- [docs/ai/api.md](docs/ai/api.md): signatures, errors and limits.
+- [docs/ai/recipes.md](docs/ai/recipes.md): integration patterns.
+- [README.md](README.md): product overview.
+- [docs/ADR](docs/ADR): design decisions.
+
+## Commands
+
+- `bash scripts/gate.sh`
+- `arrowlane describe --indent 0`
+- `python bench/verify.py`
+- `bash demo/verify.sh`

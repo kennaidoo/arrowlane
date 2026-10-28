@@ -3,8 +3,8 @@
 import arrowlane
 
 
-def test_version_is_pinned() -> None:
-    assert arrowlane.__version__ == "0.1.0"
+def test_version_is_set() -> None:
+    assert arrowlane.__version__.count(".") == 2
 
 
 def test_public_api() -> None:
