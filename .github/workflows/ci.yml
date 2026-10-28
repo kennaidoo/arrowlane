@@ -1,0 +1,41 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test-${{ matrix.os }}-py${{ matrix.py }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, py: "3.14" }
+          - { os: ubuntu-latest, py: "3.15" }
+          - { os: windows-latest, py: "3.15" }
+          - { os: macos-latest, py: "3.15" }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.12.18"
+          enable-cache: true
+      - run: uv venv --python ${{ matrix.py }}
+      - run: uv pip install -e ".[dev,server]"
+      - run: uv lock --check
+      - run: uv run ruff check .
+      - run: uv run mypy --strict src tests
+      - if: runner.os == 'Linux'
+        run: uv run pytest --cov=arrowlane --cov-report=term-missing --cov-fail-under=90
+      - if: runner.os != 'Linux'
+        run: uv run pytest

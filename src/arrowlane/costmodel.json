@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "host": "benchmark-host",
+    "platform": "win32",
+    "python": "3.14.9",
+    "pyarrow": "26.0.0",
+    "measured_at": "2026-10-28",
+    "method": "bench/probes/codec_probe.py, 200000 rows x 8 columns, median of 5. Slopes are measured. Fixed terms are estimates from API overhead and are replaced by bench/calibrate.py.",
+    "source": "seed"
+  },
+  "wire_us_per_mb": {
+    "same_host": 333.0,
+    "same_network": 800.0,
+    "wide_area": 25000.0
+  },
+  "lanes": {
+    "json": {"fixed_ms": 0.002, "enc_ms_per_mb": 106.5, "dec_ms_per_mb": 41.3, "ratio": 2.16},
+    "ipc": {"fixed_ms": 0.06, "enc_ms_per_mb": 0.31, "dec_ms_per_mb": 0.05, "ratio": 1.0},
+    "ipc-zstd": {"fixed_ms": 0.08, "enc_ms_per_mb": 2.0, "dec_ms_per_mb": 0.7, "ratio": 0.38},
+    "shm": {"fixed_ms": 0.05, "enc_ms_per_mb": 0.05, "dec_ms_per_mb": 0.05, "ratio": 0.0}
+  }
+}
