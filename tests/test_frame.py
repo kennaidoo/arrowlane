@@ -21,7 +21,9 @@ from arrowlane.errors import (
 from arrowlane.frame import (
     HEADER_SIZE,
     MAGIC,
+    MAX_HEADER_BYTES,
     MAX_PAYLOAD_BYTES,
+    MAX_UNCOMPRESSED_BYTES,
     VERSION,
     Frame,
     decode_frame,
@@ -139,3 +141,50 @@ def test_encode_rejects_a_cap_above_the_module_cap() -> None:
 def test_schema_of_rejects_a_bad_payload() -> None:
     with pytest.raises(BadHeader):
         schema_of({"schema": "not base64"})
+
+
+def raw_frame(
+    header: bytes = b"{}",
+    payload: bytes = b"",
+    *,
+    header_len: int | None = None,
+    payload_len: int | None = None,
+    uncompressed_len: int | None = None,
+) -> bytes:
+    return (
+        struct.pack(
+            "<4sBBHQQQ",
+            MAGIC,
+            VERSION,
+            2,
+            0,
+            len(payload) if payload_len is None else payload_len,
+            len(payload) if uncompressed_len is None else uncompressed_len,
+            0,
+        )
+        + struct.pack("<I", zlib.crc32(payload) & 0xFFFFFFFF)
+        + struct.pack("<H", len(header) if header_len is None else header_len)
+        + header
+        + payload
+    )
+
+
+def test_header_over_cap_is_rejected() -> None:
+    frame = Frame(2, b"", 0, 0, {"x": "y" * MAX_HEADER_BYTES})
+    with pytest.raises(OversizeFrame):
+        encode_frame(frame)
+
+
+def test_payload_over_cap_is_rejected() -> None:
+    with pytest.raises(OversizeFrame):
+        decode_frame(raw_frame(b"", b"x", payload_len=MAX_PAYLOAD_BYTES + 1))
+
+
+def test_uncompressed_over_cap_is_rejected() -> None:
+    with pytest.raises(OversizeFrame):
+        decode_frame(raw_frame(b"", b"x", uncompressed_len=MAX_UNCOMPRESSED_BYTES + 1))
+
+
+def test_header_must_be_an_object() -> None:
+    with pytest.raises(BadHeader):
+        decode_frame(raw_frame(b"[]", b"x"))
