@@ -19,7 +19,7 @@ LANES = ("json", "ipc", "ipc-zstd")
 
 def fetch(path: str) -> bytes:
     """Read one response body."""
-    with urllib.request.urlopen(f"{BASE}{path}", timeout=120) as response:
+    with urllib.request.urlopen(f"{BASE}{path}", timeout=120) as response:  # noqa: S310
         return response.read()
 
 
