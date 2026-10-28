@@ -102,3 +102,47 @@ def test_sweep_removes_only_stale_segments(tmp_path: Path) -> None:
     assert removed == 1
     assert (tmp_path / fresh.name).exists()
     assert not old_path.exists()
+
+
+def test_write_segment_is_binary_safe(tmp_path: Path) -> None:
+    payload = b"a\nb\r\nc\n" * 1000
+    descriptor = write_segment(payload, directory=tmp_path, token="k" * 32)
+    path = tmp_path / descriptor.name
+    assert descriptor.length == len(payload)
+    assert path.stat().st_size == len(payload)
+    assert path.read_bytes() == payload
+
+
+def test_zero_length_write_is_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("arrowlane.shm.os.write", lambda fd, data: 0)
+    with pytest.raises(SegmentError, match="short write"):
+        write_segment(b"payload", directory=tmp_path, token="k" * 32)
+    assert list(tmp_path.iterdir()) == [], "a failed write must leave no segment"
+
+
+def test_write_attempts_are_bounded(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = {"n": 0}
+
+    def one_byte(fd: int, data: memoryview) -> int:
+        calls["n"] += 1
+        return 1
+
+    monkeypatch.setattr("arrowlane.shm.os.write", one_byte)
+    with pytest.raises(SegmentError, match="attempts"):
+        write_segment(b"x" * 64, directory=tmp_path, token="k" * 32, max_attempts=8)
+    assert calls["n"] == 8
+
+
+def test_is_ready_does_not_create_the_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("arrowlane.shm.os.name", "posix")
+    target = tmp_path / "missing"
+    assert is_ready(target) is False
+    assert not target.exists()
+
+
+def test_is_ready_rejects_the_temp_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ARROWLAND_SHM_DIR", raising=False)
+    monkeypatch.setattr("arrowlane.shm._memory_dir_available", lambda: False)
+    assert is_ready() is False

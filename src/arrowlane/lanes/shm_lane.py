@@ -9,7 +9,7 @@ import pyarrow as pa
 
 from ..errors import LaneUnavailable, OversizeFrame, SegmentError
 from ..frame import Frame, header_for
-from ..shm import Descriptor, read_segment, write_segment
+from ..shm import Descriptor, discard, is_ready, read_segment, write_segment
 from .base import LaneInfo
 from .ipc_lane import decode_ipc_buffer, encode_ipc
 
@@ -31,6 +31,15 @@ class ShmLane:
         self._directory = directory
         self._token = token
         self._verify = verify
+
+    def ready(self) -> bool:
+        """True when this lane can write a segment here."""
+        return is_ready(self._directory)
+
+    def release(self, frame: Frame) -> None:
+        """Remove a segment that was written but never sent."""
+        descriptor = Descriptor.from_bytes(frame.payload)
+        discard(descriptor, directory=self._directory)
 
     def encode(self, table: pa.Table, *, level: int | None = None) -> Frame:
         """Serialise to IPC, write the segment, return a frame that carries the descriptor."""

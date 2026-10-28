@@ -32,6 +32,8 @@ from .errors import AuthError, ChecksumMismatch, SegmentError, SegmentGone
 NAME_PREFIX: Final = "al-"
 DEFAULT_TTL_S: Final = 60.0
 MAX_SEGMENT_BYTES: Final = 536_870_912
+MAX_WRITE_ATTEMPTS: Final = 1024
+_BINARY: Final[int] = int(getattr(os, "O_BINARY", 0))
 _DESCRIPTOR_KEYS: Final = {"name", "length", "crc32", "token", "offset"}
 
 
@@ -61,7 +63,7 @@ class Descriptor:
         """Parse and validate a descriptor. Every field is untrusted."""
         try:
             data: Any = json.loads(raw)
-        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        except (json.JSONDecodeError, UnicodeDecodeError, RecursionError) as exc:
             raise SegmentError("descriptor is not UTF-8 JSON") from exc
         if not isinstance(data, dict):
             raise SegmentError("descriptor is not an object")
@@ -100,13 +102,28 @@ def segment_dir(env: Mapping[str, str] | None = None) -> Path:
     return Path(tempfile.gettempdir())
 
 
+def _memory_dir_available() -> bool:
+    """True when a memory backed directory is configured or mounted."""
+    return Path("/dev/shm").is_dir() or bool(os.environ.get("ARROWLAND_SHM_DIR"))  # noqa: S108
+
+
 def is_ready(directory: Path | None = None) -> bool:
-    """True when this platform and directory can serve the shm lane."""
+    """True when this platform and directory can serve the shm lane.
+
+    The default directory is only ready when it is memory backed. An explicit
+    directory is probed as given, because the caller named it.
+    """
     if os.name != "posix":
         return False
-    target = directory or segment_dir()
+    if directory is None:
+        if not _memory_dir_available():
+            return False
+        target = segment_dir()
+    else:
+        target = directory
+    if not target.is_dir():
+        return False
     try:
-        target.mkdir(parents=True, exist_ok=True)
         probe = target / f"{NAME_PREFIX}probe-{uuid.uuid4().hex}"
         probe.write_bytes(b"x")
         probe.unlink()
@@ -115,29 +132,46 @@ def is_ready(directory: Path | None = None) -> bool:
         return False
 
 
+def _write_all(fd: int, view: memoryview, *, max_attempts: int) -> None:
+    """Write every byte, or raise. A zero length write is a failure, not a retry."""
+    written = 0
+    for _ in range(max_attempts):
+        if written == len(view):
+            return
+        chunk = os.write(fd, view[written:])
+        if chunk <= 0:
+            raise SegmentError(f"short write at {written} of {len(view)} bytes")
+        written += chunk
+    raise SegmentError(f"segment write did not finish after {max_attempts} attempts")
+
+
 def write_segment(
     data: bytes,
     *,
     directory: Path | None = None,
     token: str | None = None,
+    max_attempts: int = MAX_WRITE_ATTEMPTS,
 ) -> Descriptor:
     """Write data to a new segment with mode 0600 and return its descriptor."""
     if not data:
         raise SegmentError("refusing to write an empty segment")
     if len(data) > MAX_SEGMENT_BYTES:
         raise SegmentError(f"segment {len(data)} exceeds {MAX_SEGMENT_BYTES}")
+    if max_attempts <= 0:
+        raise ValueError("max_attempts must be positive")
     target = directory or segment_dir()
     target.mkdir(parents=True, exist_ok=True)
     name = f"{NAME_PREFIX}{uuid.uuid7().hex}"
     path = target / name
-    fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_RDWR, 0o600)
+    fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_RDWR | _BINARY, 0o600)
     try:
-        view = memoryview(data)
-        written = 0
-        while written < len(view):
-            written += os.write(fd, view[written:])
-    finally:
-        os.close(fd)
+        try:
+            _write_all(fd, memoryview(data), max_attempts=max_attempts)
+        finally:
+            os.close(fd)
+    except BaseException:
+        _unlink(path)
+        raise
     return Descriptor(
         name=name,
         length=len(data),
@@ -164,7 +198,7 @@ def read_segment(
         raise AuthError("segment token does not match")
     path = (directory or segment_dir()) / descriptor.name
     try:
-        fd = os.open(path, os.O_RDONLY)
+        fd = os.open(path, os.O_RDONLY | _BINARY)
     except FileNotFoundError as exc:
         raise SegmentGone(f"segment {descriptor.name} is gone") from exc
     try:
@@ -188,6 +222,11 @@ def _unlink(path: Path) -> None:
         os.unlink(path)
     except FileNotFoundError:
         return
+
+
+def discard(descriptor: Descriptor, *, directory: Path | None = None) -> None:
+    """Remove a segment that was written but never sent."""
+    _unlink((directory or segment_dir()) / descriptor.name)
 
 
 def sweep(

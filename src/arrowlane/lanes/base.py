@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal, Protocol, runtime_checkable
 
 import pyarrow as pa
 
 from ..errors import UnknownLane
 from ..frame import Frame
+from ..shm import is_ready
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,3 +69,10 @@ def available_names() -> tuple[str, ...]:
         for name, lane in _REGISTRY.items()
         if lane.info.requires == "any" or os.name == "posix"
     )
+
+
+def available_for(directory: Path | None = None) -> tuple[str, ...]:
+    """Registered lanes that this platform and directory can serve."""
+    if os.name == "posix" and is_ready(directory):
+        return tuple(_REGISTRY)
+    return tuple(name for name, lane in _REGISTRY.items() if lane.info.requires == "any")

@@ -57,3 +57,15 @@ def test_descriptor_lives_in_the_frame_payload(tmp_path: Path, table: pa.Table) 
     frame = ShmLane(directory=tmp_path, token=TOKEN).encode(table)
     assert b'"name":"al-' in frame.payload
     assert frame.uncompressed_len == len(encode_ipc(table))
+
+
+def test_release_removes_an_unsent_segment(tmp_path: Path, table: pa.Table) -> None:
+    lane = ShmLane(directory=tmp_path, token=TOKEN)
+    frame = lane.encode(table)
+    lane.release(frame)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_lane_reports_its_own_ready_state(tmp_path: Path) -> None:
+    lane = ShmLane(directory=tmp_path, token=TOKEN)
+    assert lane.ready() is True
