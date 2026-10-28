@@ -51,6 +51,9 @@ jobs:
       - name: Tests
         if: runner.os != 'Linux'
         run: uv run --no-sync pytest
+      - name: Bench gate
+        if: runner.os == 'Linux'
+        run: uv run --no-sync python bench/verify.py
 
   integrations:
     name: integrations-py3.15

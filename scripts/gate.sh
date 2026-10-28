@@ -36,6 +36,7 @@ run ruff-check "$RUFF" check .
 run ruff-format "$RUFF" format --check .
 run mypy "$MYPY" --strict src tests
 run pytest "$PYTEST" -q
+run bench "$PY" bench/verify.py
 
 if [ "$(uname -s)" = "Linux" ]; then
   run coverage "$PY" -m coverage run -m pytest -q
