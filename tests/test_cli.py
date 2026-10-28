@@ -45,9 +45,7 @@ def test_unknown_topology_exits_nonzero() -> None:
 
 
 def test_missing_model_exits_two(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    code = main(
-        ["select", "--rows", "1", "--bytes", "10", "--model", str(tmp_path / "nope.json")]
-    )
+    code = main(["select", "--rows", "1", "--bytes", "10", "--model", str(tmp_path / "nope.json")])
     captured = capsys.readouterr()
     assert code == 2
     assert captured.err.startswith("error:")
