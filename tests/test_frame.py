@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import struct
+import tracemalloc
 import zlib
 
 import pyarrow as pa
@@ -20,6 +21,7 @@ from arrowlane.errors import (
 from arrowlane.frame import (
     HEADER_SIZE,
     MAGIC,
+    MAX_PAYLOAD_BYTES,
     VERSION,
     Frame,
     decode_frame,
@@ -107,3 +109,33 @@ def test_bad_header_json() -> None:
 def test_schema_roundtrip(table: pa.Table) -> None:
     header = header_for(table, media_type="application/vnd.apache.arrow.stream")
     assert schema_of(header).equals(table.schema)
+
+
+def test_corrupt_frame_is_rejected_before_the_copy() -> None:
+    payload = b"x" * (8 * 1024 * 1024)
+    raw = bytearray(encode_frame(Frame(2, payload, 0, len(payload), {})))
+    raw[-1] ^= 0xFF
+    tracemalloc.start()
+    with pytest.raises(ChecksumMismatch):
+        decode_frame(raw)
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    assert peak < 1_000_000, f"decode copied the payload before the CRC: {peak} bytes"
+
+
+def test_frame_lane_rejects_an_unknown_id() -> None:
+    with pytest.raises(UnknownLane):
+        _ = Frame(99, b"", 0, 0, {}).lane
+
+
+def test_encode_rejects_a_cap_above_the_module_cap() -> None:
+    with pytest.raises(OversizeFrame):
+        encode_frame(
+            Frame(2, b"x", 0, 1, {}),
+            max_payload=MAX_PAYLOAD_BYTES + 1,
+        )
+
+
+def test_schema_of_rejects_a_bad_payload() -> None:
+    with pytest.raises(BadHeader):
+        schema_of({"schema": "not base64"})

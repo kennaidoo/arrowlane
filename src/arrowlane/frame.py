@@ -54,7 +54,10 @@ class Frame:
     @property
     def lane(self) -> str:
         """Lane name for this frame."""
-        return ID_LANES[self.lane_id]
+        try:
+            return ID_LANES[self.lane_id]
+        except KeyError as exc:
+            raise UnknownLane(f"lane id {self.lane_id} is not registered") from exc
 
 
 def header_for(table: pa.Table, **extra: Any) -> dict[str, Any]:
@@ -71,12 +74,14 @@ def schema_of(header: dict[str, Any]) -> pa.Schema:
     try:
         decoded = base64.b64decode(raw, validate=True)
         return pa.ipc.read_schema(pa.BufferReader(decoded))
-    except Exception as exc:
+    except (ValueError, TypeError, pa.ArrowInvalid, pa.ArrowTypeError) as exc:
         raise BadHeader("schema is not a valid Arrow schema") from exc
 
 
 def encode_frame(frame: Frame, *, max_payload: int = MAX_PAYLOAD_BYTES) -> bytes:
     """Serialise a frame. Rejects an oversize payload or header."""
+    if max_payload > MAX_PAYLOAD_BYTES:
+        raise OversizeFrame(f"max_payload {max_payload} exceeds {MAX_PAYLOAD_BYTES}")
     if len(frame.payload) > max_payload:
         raise OversizeFrame(f"payload {len(frame.payload)} exceeds {max_payload}")
     header = json.dumps(frame.header, separators=(",", ":"), sort_keys=True).encode("utf-8")
@@ -136,11 +141,12 @@ def decode_frame(
         )
     try:
         header = json.loads(bytes(view[HEADER_SIZE:body_start]))
-    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+    except (json.JSONDecodeError, UnicodeDecodeError, RecursionError) as exc:
         raise BadHeader("header is not UTF-8 JSON") from exc
     if not isinstance(header, dict):
         raise BadHeader("header is not a JSON object")
-    payload = bytes(view[body_start:])
-    if (zlib.crc32(payload) & 0xFFFFFFFF) != crc:
+    body = view[body_start:]
+    if (zlib.crc32(body) & 0xFFFFFFFF) != crc:
         raise ChecksumMismatch("payload does not match the frame CRC")
+    payload = bytes(body)
     return Frame(lane_id, payload, rows, uncompressed_len, header, flags)
