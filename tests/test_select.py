@@ -89,3 +89,37 @@ def test_scores_cover_every_candidate() -> None:
     assert {name for name, _ in decision.scores} == {"json", "ipc", "ipc-zstd"}
     assert decision.predicted_ms > 0
     assert decision.predicted_bytes > 0
+
+
+def test_throughput_keeps_a_lane_that_saves_half_the_bytes() -> None:
+    close = dict(MODEL.lanes)
+    close["json"] = LaneCost(1.000, 0.0, 0.0, 2.0)
+    close["ipc"] = LaneCost(0.960, 0.0, 0.0, 1.0)
+    model: CostModel = dataclasses.replace(
+        MODEL,
+        lanes=close,
+        wire_us_per_mb={"same_host": 0.0, "same_network": 0.0, "wide_area": 0.0},
+    )
+    decision = select_plan(
+        Workload(rows=10_000, arrow_bytes=1_000_000),
+        topology=Topology.SAME_HOST,
+        policy="throughput",
+        model=model,
+        allowed=("json", "ipc"),
+    )
+    assert decision.lane == "ipc"
+
+
+def test_negative_rows_are_rejected() -> None:
+    with pytest.raises(ValueError, match="rows"):
+        Workload(rows=-1, arrow_bytes=10)
+
+
+def test_negative_bytes_are_rejected() -> None:
+    with pytest.raises(ValueError, match="arrow_bytes"):
+        Workload(rows=1, arrow_bytes=-1)
+
+
+def test_non_empty_table_needs_bytes() -> None:
+    with pytest.raises(ValueError, match="positive"):
+        Workload(rows=1, arrow_bytes=0)

@@ -33,6 +33,14 @@ class Workload:
     arrow_bytes: int
     tabular: bool = True
 
+    def __post_init__(self) -> None:
+        if self.rows < 0:
+            raise ValueError("rows must not be negative")
+        if self.arrow_bytes < 0:
+            raise ValueError("arrow_bytes must not be negative")
+        if self.rows > 0 and self.arrow_bytes == 0:
+            raise ValueError("a non-empty table needs positive arrow_bytes")
+
 
 @dataclass(frozen=True, slots=True)
 class Decision:
@@ -122,10 +130,22 @@ def select_plan(
     else:
         best_name, best_value = min(scores, key=lambda item: (item[1], _ORDER.get(item[0], 99)))
 
-    if best_name != "json" and "json" in dict(scores) and best_value > baseline * (1.0 - min_gain):
-        return Decision(
-            "json", "GAIN_TOO_SMALL", baseline, workload.arrow_bytes, tuple(scores), tuple(rejected)
-        )
+    if best_name != "json" and "json" in dict(scores):
+        if resolved_policy is Policy.THROUGHPUT:
+            chosen_bytes = model.bytes_for(best_name, arrow_bytes=workload.arrow_bytes)
+            base_bytes = model.bytes_for("json", arrow_bytes=workload.arrow_bytes)
+            too_small = chosen_bytes > base_bytes * (1.0 - min_gain)
+        else:
+            too_small = best_value > baseline * (1.0 - min_gain)
+        if too_small:
+            return Decision(
+                "json",
+                "GAIN_TOO_SMALL",
+                baseline,
+                workload.arrow_bytes,
+                tuple(scores),
+                tuple(rejected),
+            )
     return Decision(
         best_name,
         "BEST",

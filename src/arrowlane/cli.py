@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections.abc import Sequence
 
 from . import __version__
 from .costmodel import load, load_default
+from .errors import ArrowLaneError
 from .select import Topology, Workload, select_plan
 
 
@@ -31,16 +33,24 @@ def _build() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     """Run one CLI command and return the exit code."""
     args = _build().parse_args(argv)
-    model = load(args.model) if args.model else load_default()
-    allowed = tuple(args.allow.split(",")) if args.allow else None
-    decision = select_plan(
-        Workload(rows=args.rows, arrow_bytes=args.arrow_bytes),
-        topology=args.topology,
-        policy=args.policy,
-        model=model,
-        allowed=allowed,
-        shm_ready=args.shm_ready,
-    )
+    try:
+        model = load(args.model) if args.model else load_default()
+        allowed = (
+            tuple(part.strip() for part in args.allow.split(",") if part.strip())
+            if args.allow
+            else None
+        )
+        decision = select_plan(
+            Workload(rows=args.rows, arrow_bytes=args.arrow_bytes),
+            topology=args.topology,
+            policy=args.policy,
+            model=model,
+            allowed=allowed,
+            shm_ready=args.shm_ready,
+        )
+    except (ArrowLaneError, OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
     if args.as_json:
         print(json.dumps(decision.as_dict()))
     else:
