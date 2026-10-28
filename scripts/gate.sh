@@ -36,6 +36,14 @@ run ruff-check "$RUFF" check .
 run ruff-format "$RUFF" format --check .
 run mypy "$MYPY" --strict src tests
 run pytest "$PYTEST" -q
+
+if [ "$(uname -s)" = "Linux" ]; then
+  run coverage "$PY" -m coverage run -m pytest -q
+  run coverage-report "$PY" -m coverage report
+else
+  echo "CHECK coverage SKIP (POSIX lanes)"
+fi
+
 run audit "$AUDIT" --progress-spinner off
 
 if [ "$fail" -eq 0 ]; then

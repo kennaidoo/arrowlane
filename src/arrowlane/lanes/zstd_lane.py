@@ -46,9 +46,7 @@ class ZstdLane:
             raise ValueError(f"zstd level must be between {MIN_LEVEL} and {MAX_LEVEL}")
         raw = encode_ipc(table)
         payload = zstd.compress(raw, level=chosen)
-        header = header_for(
-            table, media_type=INFO.media_type, codec="zstd", zstd_level=chosen
-        )
+        header = header_for(table, media_type=INFO.media_type, codec="zstd", zstd_level=chosen)
         return Frame(INFO.id, payload, table.num_rows, len(raw), header)
 
     def decode(self, frame: Frame, *, max_uncompressed: int | None = None) -> pa.Table:

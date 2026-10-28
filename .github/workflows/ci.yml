@@ -4,18 +4,20 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   test:
     name: test-${{ matrix.os }}-py${{ matrix.py }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -26,6 +28,8 @@ jobs:
           - { os: macos-latest, py: "3.15" }
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@v7
         with:
           version: "0.12.18"
@@ -33,9 +37,33 @@ jobs:
       - run: uv venv --python ${{ matrix.py }}
       - run: uv pip install -e ".[dev,server]"
       - run: uv lock --check
-      - run: uv run ruff check .
-      - run: uv run mypy --strict src tests
-      - if: runner.os == 'Linux'
-        run: uv run pytest --cov=arrowlane --cov-report=term-missing --cov-fail-under=90
-      - if: runner.os != 'Linux'
-        run: uv run pytest
+      - run: uv run --no-sync ruff check .
+      - run: uv run --no-sync ruff format --check .
+      - run: uv run --no-sync mypy --strict src tests
+      - name: Audit dependencies
+        if: runner.os == 'Linux'
+        run: uv run --no-sync pip-audit --progress-spinner off
+      # The coverage floor is enforced on Linux, where the POSIX shared memory
+      # lanes run. Windows and macOS measure the portable lanes only.
+      - name: Tests and coverage
+        if: runner.os == 'Linux'
+        run: uv run --no-sync pytest --cov=arrowlane --cov-report=term-missing --cov-fail-under=90
+      - name: Tests
+        if: runner.os != 'Linux'
+        run: uv run --no-sync pytest
+
+  integrations:
+    name: integrations-py3.15
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.12.18"
+          enable-cache: true
+      - run: uv venv --python 3.15
+      - run: uv pip install -e ".[dev,server,pandas,polars]"
+      - run: uv run --no-sync pytest tests/test_table.py -q

@@ -80,9 +80,9 @@ class JsonLane:
         """Encode a table as NDJSON. `level` is ignored."""
         rows = table.to_pylist()
         payload = b"\n".join(
-            json.dumps(
-                row, default=_default, separators=(",", ":"), ensure_ascii=False
-            ).encode("utf-8")
+            json.dumps(row, default=_default, separators=(",", ":"), ensure_ascii=False).encode(
+                "utf-8"
+            )
             for row in rows
         )
         header = header_for(table, media_type=INFO.media_type)
@@ -117,7 +117,5 @@ class JsonLane:
             try:
                 columns.append(pa.array(values, type=field.type))
             except (pa.ArrowInvalid, pa.ArrowTypeError) as exc:
-                raise FrameError(
-                    f"column {field.name!r} does not match the header schema"
-                ) from exc
+                raise FrameError(f"column {field.name!r} does not match the header schema") from exc
         return pa.Table.from_arrays(columns, schema=schema)

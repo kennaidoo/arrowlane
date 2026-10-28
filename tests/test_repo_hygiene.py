@@ -66,3 +66,8 @@ def test_document_urls_point_at_real_files() -> None:
         tail = url.rsplit("/", 1)[-1]
         if tail.endswith(".md"):
             assert (ROOT / tail).is_file(), f"{name} points at missing {tail}"
+
+
+def test_coverage_scope_is_documented() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "coverage is enforced on linux" in readme.lower()
