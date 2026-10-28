@@ -57,3 +57,10 @@ def test_estimate_bytes() -> None:
 def test_rejects_unknown_object() -> None:
     with pytest.raises(TypeError):
         to_table(object())
+
+
+def test_record_batch() -> None:
+    batch = pa.record_batch({"a": [1, 2]})
+    table = to_table(batch)
+    assert table.num_rows == 2
+    assert table.column_names == ["a"]

@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from arrowlane.costmodel import CostModel, load, load_default
+from arrowlane.costmodel import CostModel, load, load_default, parse
 from arrowlane.errors import ConfigError
 
 GOOD = {
@@ -92,3 +93,40 @@ def test_default_model_loads() -> None:
     model = load_default()
     assert set(model.lanes) == {"json", "ipc", "ipc-zstd", "shm"}
     assert model.provenance["source"] in {"seed", "bench"}
+
+
+def test_non_json_model_is_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "model.json"
+    path.write_text("not json", encoding="utf-8")
+    with pytest.raises(ConfigError, match="not JSON"):
+        load(path)
+
+
+def test_model_must_be_an_object() -> None:
+    with pytest.raises(ConfigError, match="JSON object"):
+        parse([])
+
+
+@pytest.mark.parametrize(
+    ("mutate", "match"),
+    [
+        (lambda data: data.update({"unknown": 1}), "unknown key"),
+        (lambda data: data.update({"provenance": {}}), "provenance"),
+        (lambda data: data.update({"wire_us_per_mb": []}), "wire_us_per_mb"),
+        (lambda data: data.update({"lanes": {}}), "non-empty object"),
+        (lambda data: data["lanes"].update({"ipc": []}), "lane ipc must be an object"),
+        (lambda data: data["lanes"]["ipc"].pop("ratio"), "missing ratio"),
+        (lambda data: data["lanes"]["ipc"].update({"fixed_ms": True}), "fixed_ms must be a number"),
+        (
+            lambda data: data["lanes"]["ipc"].update({"fixed_ms": float("inf")}),
+            "must be finite",
+        ),
+    ],
+)
+def test_invalid_models_are_rejected(
+    tmp_path: Path, mutate: Callable[[dict[str, Any]], object], match: str
+) -> None:
+    bad = json.loads(json.dumps(GOOD))
+    mutate(bad)
+    with pytest.raises(ConfigError, match=match):
+        load(write(tmp_path, bad))

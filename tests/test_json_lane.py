@@ -98,3 +98,49 @@ def test_unknown_column_is_rejected() -> None:
     broken = Frame(frame.lane_id, b'{"a":1,"b":2}', 1, 13, frame.header)
     with pytest.raises(FrameError, match="unknown column"):
         JsonLane().decode(broken)
+
+
+def test_duration_roundtrip() -> None:
+    schema = pa.schema([("d", pa.duration("us"))])
+    table = pa.Table.from_arrays(
+        [pa.array([dt.timedelta(seconds=1.5)], type=pa.duration("us"))], schema=schema
+    )
+    lane = JsonLane()
+    assert lane.decode(lane.encode(table)).equals(table)
+
+
+def test_tagged_value_must_be_text() -> None:
+    table = pa.table(
+        {"a": pa.array([dt.datetime(2026, 1, 1, tzinfo=dt.UTC)], type=pa.timestamp("us", tz="UTC"))}
+    )
+    frame = JsonLane().encode(table)
+    payload = b'{"a":{"$":"ts","v":1}}'
+    broken = Frame(frame.lane_id, payload, 1, len(payload), frame.header)
+    with pytest.raises(FrameError, match="not text"):
+        JsonLane().decode(broken)
+
+
+def test_duration_tag_must_be_a_number() -> None:
+    schema = pa.schema([("d", pa.duration("us"))])
+    table = pa.Table.from_arrays([pa.array([], type=pa.duration("us"))], schema=schema)
+    frame = JsonLane().encode(table)
+    payload = b'{"d":{"$":"dur","v":"x"}}'
+    broken = Frame(frame.lane_id, payload, 1, len(payload), frame.header)
+    with pytest.raises(FrameError, match="duration tag"):
+        JsonLane().decode(broken)
+
+
+def test_non_object_row_is_rejected() -> None:
+    frame = JsonLane().encode(pa.table({"a": [1]}))
+    payload = b"[1]"
+    broken = Frame(frame.lane_id, payload, 1, len(payload), frame.header)
+    with pytest.raises(FrameError, match="not a JSON object"):
+        JsonLane().decode(broken)
+
+
+def test_column_type_mismatch_is_rejected() -> None:
+    frame = JsonLane().encode(pa.table({"a": pa.array([1], type=pa.int64())}))
+    payload = b'{"a":"not-an-int"}'
+    broken = Frame(frame.lane_id, payload, 1, len(payload), frame.header)
+    with pytest.raises(FrameError, match="does not match"):
+        JsonLane().decode(broken)

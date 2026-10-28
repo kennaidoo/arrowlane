@@ -13,6 +13,7 @@ import pytest
 from arrowlane.errors import AuthError, ChecksumMismatch, SegmentError, SegmentGone
 from arrowlane.shm import (
     Descriptor,
+    discard,
     is_ready,
     read_segment,
     segment_dir,
@@ -146,3 +147,57 @@ def test_is_ready_rejects_the_temp_fallback(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.delenv("ARROWLAND_SHM_DIR", raising=False)
     monkeypatch.setattr("arrowlane.shm._memory_dir_available", lambda: False)
     assert is_ready() is False
+
+
+@pytest.mark.parametrize(
+    ("payload", "match"),
+    [
+        ({"name": "x", "length": 1, "crc32": 0, "token": "t" * 32}, "name"),
+        ({"name": "al-x/y", "length": 1, "crc32": 0, "token": "t" * 32}, "name"),
+        ({"name": "al-x", "length": True, "crc32": 0, "token": "t" * 32}, "length"),
+        ({"name": "al-x", "length": 0, "crc32": 0, "token": "t" * 32}, "length"),
+        ({"name": "al-x", "length": 1, "crc32": 0, "offset": -1, "token": "t" * 32}, "offset"),
+        ({"name": "al-x", "length": 1, "crc32": True, "token": "t" * 32}, "crc32"),
+        ({"name": "al-x", "length": 1, "crc32": 0, "token": "short"}, "token"),
+    ],
+)
+def test_descriptor_rejects_bad_fields(payload: dict[str, object], match: str) -> None:
+    with pytest.raises(SegmentError, match=match):
+        Descriptor.from_bytes(json.dumps(payload).encode("utf-8"))
+
+
+def test_write_segment_rejects_empty_data(tmp_path: Path) -> None:
+    with pytest.raises(SegmentError, match="empty"):
+        write_segment(b"", directory=tmp_path, token="k" * 32)
+
+
+def test_write_segment_rejects_oversize_data(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("arrowlane.shm.MAX_SEGMENT_BYTES", 2)
+    with pytest.raises(SegmentError, match="exceeds"):
+        write_segment(b"abc", directory=tmp_path, token="k" * 32)
+
+
+def test_write_segment_rejects_zero_attempts(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="positive"):
+        write_segment(b"abc", directory=tmp_path, token="k" * 32, max_attempts=0)
+
+
+def test_discard_removes_a_segment(tmp_path: Path) -> None:
+    descriptor = write_segment(b"abc", directory=tmp_path, token="k" * 32)
+    discard(descriptor, directory=tmp_path)
+    assert not (tmp_path / descriptor.name).exists()
+    discard(descriptor, directory=tmp_path)
+
+
+def test_sweep_missing_directory_returns_zero(tmp_path: Path) -> None:
+    assert sweep(directory=tmp_path / "missing") == 0
+
+
+def test_read_segment_rejects_a_size_mismatch(tmp_path: Path) -> None:
+    descriptor = write_segment(b"abc", directory=tmp_path, token="k" * 32)
+    wrong = Descriptor(descriptor.name, descriptor.length + 1, descriptor.crc32, descriptor.token)
+    with pytest.raises(SegmentError, match="segment is"):
+        read_segment(wrong, directory=tmp_path, token="k" * 32)
+    discard(descriptor, directory=tmp_path)

@@ -123,3 +123,8 @@ def test_negative_bytes_are_rejected() -> None:
 def test_non_empty_table_needs_bytes() -> None:
     with pytest.raises(ValueError, match="positive"):
         Workload(rows=1, arrow_bytes=0)
+
+
+def test_empty_allowlist_returns_no_candidate() -> None:
+    decision = pick(allowed=())
+    assert (decision.lane, decision.reason) == ("json", "NO_CANDIDATE")

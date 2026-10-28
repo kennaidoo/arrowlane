@@ -8,7 +8,7 @@ from pathlib import Path
 import pyarrow as pa
 import pytest
 
-from arrowlane.errors import AuthError, SegmentGone
+from arrowlane.errors import AuthError, LaneUnavailable, OversizeFrame, SegmentError, SegmentGone
 from arrowlane.lanes.ipc_lane import encode_ipc
 from arrowlane.lanes.shm_lane import ShmLane
 
@@ -69,3 +69,39 @@ def test_release_removes_an_unsent_segment(tmp_path: Path, table: pa.Table) -> N
 def test_lane_reports_its_own_ready_state(tmp_path: Path) -> None:
     lane = ShmLane(directory=tmp_path, token=TOKEN)
     assert lane.ready() is True
+
+
+def test_encode_requires_a_token(tmp_path: Path, table: pa.Table) -> None:
+    with pytest.raises(LaneUnavailable):
+        ShmLane(directory=tmp_path).encode(table)
+
+
+def test_decode_requires_a_token(tmp_path: Path, table: pa.Table) -> None:
+    lane = ShmLane(directory=tmp_path, token=TOKEN)
+    frame = lane.encode(table)
+    with pytest.raises(LaneUnavailable):
+        ShmLane(directory=tmp_path).decode(frame)
+    lane.release(frame)
+
+
+def test_descriptor_length_mismatch_is_rejected(tmp_path: Path, table: pa.Table) -> None:
+    lane = ShmLane(directory=tmp_path, token=TOKEN)
+    frame = lane.encode(table)
+    wrong = type(frame)(
+        frame.lane_id,
+        frame.payload,
+        frame.rows,
+        frame.uncompressed_len + 1,
+        frame.header,
+    )
+    with pytest.raises(SegmentError, match="descriptor length"):
+        lane.decode(wrong)
+    lane.release(frame)
+
+
+def test_oversize_segment_is_rejected(tmp_path: Path, table: pa.Table) -> None:
+    lane = ShmLane(directory=tmp_path, token=TOKEN)
+    frame = lane.encode(table)
+    with pytest.raises(OversizeFrame):
+        lane.decode(frame, max_uncompressed=1)
+    lane.release(frame)

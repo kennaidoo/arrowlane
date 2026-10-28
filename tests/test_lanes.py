@@ -10,7 +10,7 @@ import pytest
 from arrowlane.errors import UnknownLane
 from arrowlane.frame import Frame
 from arrowlane.lanes import get_lane, lane_names, register
-from arrowlane.lanes.base import LaneInfo
+from arrowlane.lanes.base import LaneInfo, available_for
 
 
 class DummyLane:
@@ -42,3 +42,9 @@ def test_lane_info_is_frozen() -> None:
     info = LaneInfo(id=1, name="a", media_type="m")
     with pytest.raises(dataclasses.FrozenInstanceError):
         setattr(info, "name", "b")  # noqa: B010 - the point is that it raises
+
+
+def test_available_for_includes_shm_when_ready(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("arrowlane.lanes.base.os.name", "posix")
+    monkeypatch.setattr("arrowlane.lanes.base.is_ready", lambda directory=None: True)
+    assert "shm" in available_for()
