@@ -29,7 +29,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-server = ["starlette>=0.40,<1", "uvicorn>=0.35,<1"]
+server = ["starlette>=1.3.1,<2", "uvicorn>=0.54,<1"]
 duckdb = ["duckdb>=2.0.0,<3"]
 polars = ["polars>=1.0"]
 pandas = ["pandas>=3.0"]
@@ -38,7 +38,7 @@ dev = [
     "pytest>=8.3",
     "pytest-cov>=6.0",
     "pytest-timeout>=2.3",
-    "httpx>=0.28",
+    "httpx2>=2.16",
     "hypothesis>=6.170",
     "numpy>=2",
     "mypy>=1.13",
@@ -99,6 +99,8 @@ markers = [
 branch = true
 source = ["arrowlane"]
 
+# The coverage floor is enforced on Linux, where the POSIX shared memory
+# lanes run. Windows and macOS measure the portable lanes only.
 [tool.coverage.report]
 fail_under = 90
 show_missing = true
