@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>arrowlane lanes</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 2rem; background: #0b0e14; color: #e6edf3; font-family: ui-sans-serif, system-ui, sans-serif; }
+    h1 { margin: 0 0 .25rem; font-size: 1.5rem; }
+    p { margin: 0 0 1.5rem; color: #8b949e; }
+    table { border-collapse: collapse; width: 100%; max-width: 60rem; }
+    th, td { text-align: left; padding: .55rem .75rem; border-bottom: 1px solid #232a36; }
+    th { color: #8b949e; font-weight: 500; }
+    .bar { height: .6rem; background: #3fb950; border-radius: 2px; min-width: 2px; }
+  </style>
+</head>
+<body>
+  <h1>arrowlane</h1>
+  <p id="meta">loading results...</p>
+  <table>
+    <thead>
+      <tr><th>lane</th><th>wire bytes</th><th>ms</th><th>MB/s</th><th>wire size</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <script>
+    async function load() {
+      const response = await fetch('/results.json', { cache: 'no-store' });
+      if (!response.ok) {
+        document.getElementById('meta').textContent = 'No results yet. Run the client service.';
+        return;
+      }
+      const data = await response.json();
+      document.getElementById('meta').textContent =
+        `${data.rows} rows, measured ${data.measured_at}, decision ${data.decision.lane} (${data.decision.reason})`;
+      const max = Math.max(...data.lanes.map((row) => row.bytes));
+      const body = document.getElementById('rows');
+      body.replaceChildren();
+      for (const row of data.lanes) {
+        const mbps = (row.bytes / 1e6) / (row.ms / 1000);
+        const tr = document.createElement('tr');
+        for (const value of [row.lane, String(row.bytes), row.ms.toFixed(2), mbps.toFixed(1)]) {
+          const td = document.createElement('td');
+          td.textContent = value;
+          tr.appendChild(td);
+        }
+        const barCell = document.createElement('td');
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.width = `${(row.bytes / max) * 100}%`;
+        barCell.appendChild(bar);
+        tr.appendChild(barCell);
+        body.appendChild(tr);
+      }
+    }
+    load();
+  </script>
+</body>
+</html>

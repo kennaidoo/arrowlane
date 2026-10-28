@@ -1,0 +1,70 @@
+name: arrowlane-demo
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: demo/app/Dockerfile
+    environment:
+      ARROWLAND_MAX_ROWS: "1000000"
+    ports:
+      - "127.0.0.1:8080:8000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  console:
+    build:
+      context: console
+    depends_on:
+      - app
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - results:/data:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  client:
+    build:
+      context: ..
+      dockerfile: demo/client/Dockerfile
+    profiles: ["run"]
+    depends_on:
+      app:
+        condition: service_healthy
+      init:
+        condition: service_completed_successfully
+    environment:
+      ARROWLAND_BASE: "http://app:8000"
+      ARROWLAND_ROWS: "50000"
+    volumes:
+      - results:/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  init:
+    image: alpine:3.22
+    command: ["sh", "-c", "chown -R 65532:65532 /data"]
+    volumes:
+      - results:/data
+
+volumes:
+  results:
