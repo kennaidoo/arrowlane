@@ -7,7 +7,8 @@ from decimal import Decimal
 import pyarrow as pa
 import pytest
 
-from arrowlane.errors import FrameError
+from arrowlane.errors import FrameError, OversizeFrame
+from arrowlane.frame import Frame, header_for
 from arrowlane.lanes.ipc_lane import IpcLane, decode_ipc, encode_ipc
 
 
@@ -51,3 +52,18 @@ def test_null_and_decimal_roundtrip() -> None:
     ]
     table = pa.Table.from_arrays(columns, schema=schema)
     assert decode_ipc(encode_ipc(table)).equals(table)
+
+
+def test_ipc_decode_honours_the_cap() -> None:
+    frame = IpcLane().encode(pa.table({"a": list(range(100))}))
+    with pytest.raises(OversizeFrame):
+        IpcLane().decode(frame, max_uncompressed=64)
+
+
+def test_header_schema_mismatch_is_rejected() -> None:
+    real = pa.table({"a": [1]})
+    other = pa.table({"b": ["x"]})
+    payload = encode_ipc(other)
+    frame = Frame(2, payload, 1, len(payload), header_for(real))
+    with pytest.raises(FrameError, match="schema"):
+        IpcLane().decode(frame)

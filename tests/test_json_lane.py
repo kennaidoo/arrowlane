@@ -8,7 +8,8 @@ from decimal import Decimal
 import pyarrow as pa
 import pytest
 
-from arrowlane.errors import FrameError
+from arrowlane.errors import FrameError, OversizeFrame
+from arrowlane.frame import Frame
 from arrowlane.lanes.json_lane import JsonLane
 
 
@@ -76,4 +77,24 @@ def test_bad_json_line_raises_frame_error() -> None:
     frame = JsonLane().encode(table)
     broken = type(frame)(frame.lane_id, b"{not json", 1, 9, frame.header)
     with pytest.raises(FrameError):
+        JsonLane().decode(broken)
+
+
+def test_json_decode_honours_the_cap() -> None:
+    frame = JsonLane().encode(pa.table({"a": list(range(100))}))
+    with pytest.raises(OversizeFrame):
+        JsonLane().decode(frame, max_uncompressed=64)
+
+
+def test_missing_column_is_rejected() -> None:
+    frame = JsonLane().encode(pa.table({"a": [1]}))
+    broken = Frame(frame.lane_id, b'{"b":1}', 1, 7, frame.header)
+    with pytest.raises(FrameError, match="missing column"):
+        JsonLane().decode(broken)
+
+
+def test_unknown_column_is_rejected() -> None:
+    frame = JsonLane().encode(pa.table({"a": [1]}))
+    broken = Frame(frame.lane_id, b'{"a":1,"b":2}', 1, 13, frame.header)
+    with pytest.raises(FrameError, match="unknown column"):
         JsonLane().decode(broken)

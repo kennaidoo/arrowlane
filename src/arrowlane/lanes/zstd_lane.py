@@ -14,7 +14,7 @@ import pyarrow as pa
 from ..errors import FrameError, OversizeFrame
 from ..frame import MAX_UNCOMPRESSED_BYTES, Frame, header_for
 from .base import LaneInfo
-from .ipc_lane import decode_ipc, encode_ipc
+from .ipc_lane import check_header_schema, decode_ipc, encode_ipc
 
 INFO = LaneInfo(id=3, name="ipc-zstd", media_type="application/vnd.apache.arrow.stream")
 DEFAULT_LEVEL = 3
@@ -61,4 +61,6 @@ class ZstdLane:
             raise FrameError(
                 f"length mismatch: declared {frame.uncompressed_len}, decompressed {len(raw)}"
             )
-        return decode_ipc(raw)
+        table = decode_ipc(raw)
+        check_header_schema(frame, table)
+        return table

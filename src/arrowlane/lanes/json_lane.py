@@ -15,8 +15,8 @@ from typing import Any
 
 import pyarrow as pa
 
-from ..errors import FrameError
-from ..frame import Frame, header_for, schema_of
+from ..errors import FrameError, OversizeFrame
+from ..frame import MAX_UNCOMPRESSED_BYTES, Frame, header_for, schema_of
 from .base import LaneInfo
 
 INFO = LaneInfo(id=1, name="json", media_type="application/x-ndjson")
@@ -89,16 +89,31 @@ class JsonLane:
         return Frame(INFO.id, payload, table.num_rows, len(payload), header)
 
     def decode(self, frame: Frame, *, max_uncompressed: int | None = None) -> pa.Table:
-        """Decode NDJSON using the schema in the header."""
+        """Decode NDJSON using the schema in the header. Rows must match it."""
+        cap = MAX_UNCOMPRESSED_BYTES if max_uncompressed is None else max_uncompressed
+        if frame.uncompressed_len != len(frame.payload):
+            raise FrameError("frame declares a different uncompressed length")
+        if len(frame.payload) > cap:
+            raise OversizeFrame(f"payload {len(frame.payload)} exceeds {cap}")
         schema = schema_of(frame.header)
         try:
             text = frame.payload.decode("utf-8")
             rows = [json.loads(line) for line in text.splitlines() if line]
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
             raise FrameError("payload is not valid NDJSON") from exc
+        expected = {field.name for field in schema}
+        for row in rows:
+            if not isinstance(row, dict):
+                raise FrameError("payload row is not a JSON object")
+            if row.keys() != expected:
+                missing = expected - row.keys()
+                if missing:
+                    raise FrameError(f"row is missing column {sorted(missing)[0]!r}")
+                extra = row.keys() - expected
+                raise FrameError(f"row carries unknown column {sorted(extra)[0]!r}")
         columns = []
         for field in schema:
-            values = [_revive(row.get(field.name)) for row in rows]
+            values = [_revive(row[field.name]) for row in rows]
             try:
                 columns.append(pa.array(values, type=field.type))
             except (pa.ArrowInvalid, pa.ArrowTypeError) as exc:

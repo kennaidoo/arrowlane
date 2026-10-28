@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pyarrow as pa
 
-from ..errors import FrameError
-from ..frame import Frame, header_for
+from ..errors import FrameError, OversizeFrame
+from ..frame import MAX_UNCOMPRESSED_BYTES, Frame, header_for, schema_of
 from .base import LaneInfo
 
 INFO = LaneInfo(id=2, name="ipc", media_type="application/vnd.apache.arrow.stream")
@@ -34,6 +34,13 @@ def decode_ipc(raw: bytes) -> pa.Table:
     return decode_ipc_buffer(pa.BufferReader(raw))
 
 
+def check_header_schema(frame: Frame, table: pa.Table) -> None:
+    """Require the header schema and the payload schema to agree."""
+    declared = schema_of(frame.header)
+    if not declared.equals(table.schema):
+        raise FrameError("frame header schema does not match the payload schema")
+
+
 class IpcLane:
     """Uncompressed Arrow IPC over any transport."""
 
@@ -46,5 +53,12 @@ class IpcLane:
         return Frame(INFO.id, raw, table.num_rows, len(raw), header)
 
     def decode(self, frame: Frame, *, max_uncompressed: int | None = None) -> pa.Table:
-        """Decode an IPC stream."""
-        return decode_ipc(frame.payload)
+        """Decode an IPC stream, within the caller's cap, with a matching schema."""
+        cap = MAX_UNCOMPRESSED_BYTES if max_uncompressed is None else max_uncompressed
+        if frame.uncompressed_len != len(frame.payload):
+            raise FrameError("frame declares a different uncompressed length")
+        if len(frame.payload) > cap:
+            raise OversizeFrame(f"payload {len(frame.payload)} exceeds {cap}")
+        table = decode_ipc(frame.payload)
+        check_header_schema(frame, table)
+        return table

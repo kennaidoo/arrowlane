@@ -8,6 +8,7 @@ import pyarrow as pa
 import pytest
 
 from arrowlane.errors import FrameError, OversizeFrame
+from arrowlane.frame import header_for
 from arrowlane.lanes.ipc_lane import encode_ipc
 from arrowlane.lanes.zstd_lane import ZstdLane, bounded_decompress
 
@@ -64,4 +65,18 @@ def test_length_mismatch_is_rejected(table: pa.Table) -> None:
         frame.lane_id, frame.payload, frame.rows, frame.uncompressed_len + 1, frame.header
     )
     with pytest.raises(FrameError, match="length"):
+        ZstdLane().decode(wrong)
+
+
+def test_header_schema_mismatch_is_rejected(table: pa.Table) -> None:
+    other = pa.table({"b": ["x"] * table.num_rows})
+    frame = ZstdLane().encode(other)
+    wrong = type(frame)(
+        frame.lane_id,
+        frame.payload,
+        frame.rows,
+        frame.uncompressed_len,
+        header_for(table),
+    )
+    with pytest.raises(FrameError, match="schema"):
         ZstdLane().decode(wrong)
