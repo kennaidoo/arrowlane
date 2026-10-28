@@ -9,9 +9,17 @@ def test_version_is_pinned() -> None:
 
 def test_public_api() -> None:
     assert set(arrowlane.__all__) == {
-        "__version__",
+        "Decision",
         "Frame",
+        "Policy",
+        "Topology",
+        "Workload",
+        "__version__",
         "decode_frame",
         "encode_frame",
+        "pack",
+        "plan",
         "to_table",
+        "transit",
+        "unpack",
     }

@@ -9,9 +9,12 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
+from functools import lru_cache
 from importlib.resources import files
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Final
 
 from .errors import ConfigError
@@ -37,9 +40,9 @@ class CostModel:
     """A validated, versioned cost model."""
 
     schema_version: int
-    provenance: dict[str, Any]
-    wire_us_per_mb: dict[str, float]
-    lanes: dict[str, LaneCost]
+    provenance: Mapping[str, Any]
+    wire_us_per_mb: Mapping[str, float]
+    lanes: Mapping[str, LaneCost]
 
     def predict(self, lane: str, *, mb: float, topology: str, policy: str = "latency") -> float:
         """Predicted end to end milliseconds for one table on one lane."""
@@ -120,10 +123,16 @@ def parse(data: Any) -> CostModel:
         )
     if "json" not in lanes:
         raise ConfigError("cost model must carry the json lane as the baseline")
-    return CostModel(version, provenance, wire, lanes)
+    return CostModel(
+        version,
+        MappingProxyType(provenance),
+        MappingProxyType(wire),
+        MappingProxyType(lanes),
+    )
 
 
+@lru_cache(maxsize=1)
 def load_default() -> CostModel:
-    """Load the shipped cost model."""
+    """Load the shipped cost model once per process."""
     resource = files("arrowlane").joinpath("costmodel.json")
     return parse(json.loads(resource.read_text(encoding="utf-8")))

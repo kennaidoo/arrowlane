@@ -27,6 +27,7 @@ from .errors import (
 
 MAGIC: Final = b"ALN1"
 VERSION: Final = 1
+FRAME_MEDIA_TYPE: Final = "application/vnd.arrowlane.frame"
 MAX_HEADER_BYTES: Final = 65_535
 MAX_PAYLOAD_BYTES: Final = 536_870_912
 MAX_UNCOMPRESSED_BYTES: Final = 1_073_741_824

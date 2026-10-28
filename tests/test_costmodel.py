@@ -130,3 +130,13 @@ def test_invalid_models_are_rejected(
     mutate(bad)
     with pytest.raises(ConfigError, match=match):
         load(write(tmp_path, bad))
+
+
+def test_default_model_is_cached() -> None:
+    assert load_default() is load_default()
+
+
+def test_model_mappings_are_read_only() -> None:
+    model = load_default()
+    with pytest.raises(TypeError):
+        model.lanes["json"] = model.lanes["ipc"]  # type: ignore[index]
