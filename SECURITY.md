@@ -12,8 +12,9 @@ Report a vulnerability. Do not open a public issue.
 
 Include the affected commit, the steps to reproduce, and the impact.
 
-You get an acknowledgement within 7 days. A fix or a documented decision
-follows within 30 days.
+You get an acknowledgement within 30 days. A fix or a documented decision
+follows within 120 days. These are best-effort targets, not a service-level
+agreement.
 
 ## Scope
 
