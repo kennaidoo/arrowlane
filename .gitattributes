@@ -2,3 +2,10 @@
 *.bat text eol=crlf
 *.ps1 text eol=crlf
 LICENSE text
+*.sh text eol=lf
+Dockerfile* text eol=lf
+*.wasm binary
+*.exe binary
+*.pdb binary
+*.tar binary
+
