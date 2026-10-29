@@ -109,8 +109,8 @@ time, the model predicts the largest shape within 0.5 percent and
 the middle shapes within 69 percent, because the JSON cost changes with cache
 residency. The selector falls back to JSON when the predicted gain is under 10
 percent. `bench/calibrate.py` records every residual in the model provenance.
-The CI gate checks wire ratios and lane ordering, so it survives a different
-runner.
+The benchmark gate checks wire ratios and lane ordering, so it is not tied to a
+specific host.
 
 Recalibrate on a new host:
 

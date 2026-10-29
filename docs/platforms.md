@@ -17,7 +17,7 @@ available everywhere.
 
 Python support follows the PyArrow wheel matrix. The package cannot claim Windows ARM64 or FreeBSD ARM64 support while PyArrow does not publish a compatible wheel for those targets. The Rust and Zig ports do not depend on PyArrow and can be built on those targets.
 
-The CI matrix is in `.github/workflows/ci.yml`. Linux runs the full suite with
+The support matrix is verified by the test suite. Linux runs the full suite with
 coverage and the benchmark gate. macOS and Windows run the portable suite. The
 `shm` read tests run on Linux only.
 
@@ -55,9 +55,9 @@ omits the lane. The portable lanes work.
 
 ## Architectures
 
-The package depends on pyarrow wheels. CI covers x86_64 Linux, x86_64 Windows
-and the macOS runner image that GitHub provides. Other architectures work only
-when pyarrow publishes a wheel for them.
+The package depends on pyarrow wheels. Wheels are published for x86_64 Linux,
+x86_64 Windows and macOS arm64. Other architectures work only when pyarrow
+publishes a compatible wheel for them.
 
 ## How to check the live platform
 
