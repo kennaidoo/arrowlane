@@ -3,6 +3,13 @@
 All notable changes to this project are recorded here. The format follows
 Keep a Changelog, and the project uses semantic versioning.
 
+## 0.3.1 - 2026-10-29
+
+### Changed
+
+- Relaxed `SECURITY.md` response targets to 30-day acknowledgement and 120-day
+  fix or documented decision, marked as best-effort targets rather than an SLA.
+
 ## 0.3.0 - 2026-10-28
 
 ### Added
