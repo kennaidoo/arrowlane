@@ -5,8 +5,8 @@ value is the median of five measured runs after one warmup run. The benchmark
 ran in Linux x86_64 containers on Docker 29.9.2. Each container had 2 CPUs and
 2 GiB of memory, no network access and a read-only root filesystem.
 
-This is a container measurement. It is separate from the host measurements in
-`arrowlane-zig/docs/performance.md`.
+This is the maintained cross-language record. The host-specific performance
+pages in the Rust and Zig repositories point back to this page.
 
 ## Results
 
