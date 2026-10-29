@@ -4,6 +4,7 @@
 
 ## Start here
 
+- [AGENTS.md](AGENTS.md): short command card for coding agents.
 - [docs/ai/operating-guide.md](docs/ai/operating-guide.md): operating guide for coding agents.
 - [docs/ai/manifest.json](docs/ai/manifest.json): machine-readable capabilities and limits.
 - [docs/ai/quickstart.md](docs/ai/quickstart.md): install and first call.
