@@ -42,7 +42,7 @@ jobs:
         run: uv run --no-sync pytest --cov=arrowlane --cov-report=term-missing --cov-fail-under=90
 
   test-other:
-    name: test-${{ matrix.os }}-py3.15
+    name: test-other
     if: github.event_name != 'pull_request'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
