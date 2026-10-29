@@ -1,7 +1,7 @@
-FROM python:3.15-slim-bookworm
+FROM python:3.15-slim-trixie
 
 # Pin the base image digest before a release:
-# docker inspect --format '{{index .RepoDigests 0}}' python:3.15-slim-bookworm
+# docker inspect --format '{{index .RepoDigests 0}}' python:3.15-slim-trixie
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
