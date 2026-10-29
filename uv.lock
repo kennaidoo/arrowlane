@@ -28,6 +28,7 @@ name = "arrowlane"
 version = "0.3.1"
 source = { editable = "." }
 dependencies = [
+    { name = "orjson" },
     { name = "pyarrow" },
     { name = "tzdata", marker = "sys_platform == 'win32'" },
 ]
@@ -71,6 +72,7 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.13" },
     { name = "numpy", marker = "extra == 'bench'", specifier = ">=2" },
     { name = "numpy", marker = "extra == 'dev'", specifier = ">=2" },
+    { name = "orjson", specifier = ">=3.10" },
     { name = "orjson", marker = "extra == 'bench'", specifier = ">=3.10" },
     { name = "pandas", marker = "extra == 'pandas'", specifier = ">=3.0" },
     { name = "pip-audit", marker = "extra == 'dev'", specifier = ">=2.8" },

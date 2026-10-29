@@ -51,6 +51,15 @@ def test_roundtrip_rich_types(rich: pa.Table) -> None:
     assert out.to_pylist()[0]["ts"].tzinfo is not None
 
 
+def test_encoded_payload_keeps_non_native_tags(rich: pa.Table) -> None:
+    payload = JsonLane().encode(rich).payload
+    assert b'"$":"ts"' in payload
+    assert b'"$":"date"' in payload
+    assert b'"$":"time"' in payload
+    assert b'"$":"dec"' in payload
+    assert b'"$":"bin"' in payload
+
+
 def test_nulls_roundtrip() -> None:
     table = pa.table({"a": pa.array([1, None], type=pa.int64()), "b": [None, "x"]})
     assert JsonLane().decode(JsonLane().encode(table)).equals(table)

@@ -11,7 +11,13 @@ COPY docs/platforms.md ./docs/platforms.md
 COPY src ./src
 COPY bench/containers/fixture.py bench/containers/python_bench.py /app/bench/containers/
 
-RUN pip install --no-cache-dir .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-compile --no-deps pyarrow==26.0.0 \
+ && pip install --no-compile --no-deps \
+      --target /usr/local/lib/python3.15/site-packages \
+      --platform manylinux_2_39_x86_64 orjson==3.13.0 \
+ && pip install --no-compile --no-deps . \
+ && python -m pip uninstall -y pip setuptools wheel
 
 RUN useradd --uid 65532 --no-create-home bench
 USER 65532

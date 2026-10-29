@@ -12,29 +12,44 @@ This is a container measurement. It is separate from the host measurements in
 
 | Implementation | Lane | Wire bytes | Wire delta vs Python | Encode ms | Decode ms |
 |---|---|---:|---:|---:|---:|
-| Python | json | 42,505,756 | 0 | 3111.630 | 2624.323 |
-| Python | ipc | 12,670,845 | 0 | 5.283 | 3.331 |
-| Python | ipc-zstd | 1,680,124 | 0 | 23.082 | 15.948 |
-| Rust | json | 42,505,812 | +56 | 228.862 | 1034.057 |
-| Rust | ipc | 12,671,117 | +272 | 1.812 | 2.613 |
-| Rust | ipc-zstd | 1,625,309 | -54,815 | 24.052 | 10.075 |
-| Zig | json | 42,372,426 | -133,330 | 173.382 | 323.423 |
-| Zig | ipc | 12,670,849 | +4 | 43.122 | 24.621 |
-| Zig | ipc-zstd | 1,620,045 | -60,079 | 55.257 | 179.177 |
+| Python | json | 42,505,756 | 0 | 2572.575 | 1886.219 |
+| Python | ipc | 12,670,845 | 0 | 5.166 | 3.917 |
+| Python | ipc-zstd | 1,680,124 | 0 | 24.078 | 15.165 |
+| Rust | json | 42,505,812 | +56 | 212.330 | 1047.205 |
+| Rust | ipc | 12,671,117 | +272 | 1.393 | 2.409 |
+| Rust | ipc-zstd | 1,625,309 | -54,815 | 25.095 | 10.273 |
+| Zig | json | 42,372,426 | -133,330 | 172.880 | 311.182 |
+| Zig | ipc | 12,670,849 | +4 | 41.087 | 24.640 |
+| Zig | ipc-zstd | 1,620,045 | -60,079 | 55.157 | 19.526 |
 
-Measured at `2026-10-29T08:04:13+00:00`.
+Measured at `2026-10-29T08:41:33+00:00`.
+
+## Images
+
+| Image | Size | Runtime |
+|---|---:|---|
+| Python | 412,695,390 bytes | `python:3.15-slim-bookworm` |
+| Rust | 42,430,357 bytes | `gcr.io/distroless/cc-debian12` |
+| Zig | 2,102,909 bytes | `scratch` |
+
+The Python and Rust size targets were missed. The Python Alpine image reached
+349,582,071 bytes, but its PyArrow musl build regressed Python IPC from about
+5.2 ms to 20.6 ms, so it was rejected. The final Python image therefore keeps
+the glibc runtime and installs the compatible CPython 3.15 `orjson` wheel
+explicitly. The Rust static musl image was also rejected after IPC decode
+regressed from about 2.4 ms to 13.8 ms. The final Rust image uses a dynamic
+glibc binary in distroless and keeps the speed.
 
 ## Verdicts
 
-- JSON is the clear Zig win. Zig encode is 17.95x faster than Python and 1.32x
-  faster than Rust. Zig decode is 8.11x faster than Python and 3.20x faster
+- JSON is the clear Zig win. Zig encode is 14.88x faster than Python and 1.23x
+  faster than Rust. Zig decode is 6.06x faster than Python and 3.37x faster
   than Rust.
-- IPC is led by Rust. Rust encode is 1.81 ms against Python 5.28 ms and Zig
-  43.12 ms. Rust decode is 2.61 ms against Python 3.33 ms and Zig 24.62 ms.
-  Zig is about 8.2x slower than Python on encode and 7.4x slower on decode.
-- ipc-zstd decode is led by Rust at 10.08 ms. Python is 15.95 ms and Zig is
-  179.18 ms. Zig decode is 11.2x slower than Python and 17.8x slower than
-  Rust. Zig encode is also slower than both.
+- IPC is led by Rust. Rust encode is 1.39 ms against Python 5.17 ms and Zig
+  41.09 ms. Rust decode is 2.41 ms against Python 3.92 ms and Zig 24.64 ms.
+- ipc-zstd decode is led by Rust at 10.27 ms. Python is 15.17 ms and Zig is
+  19.53 ms. Zig decode improved from 179.18 ms to 19.53 ms after switching to
+  libzstd. Zig is now 1.29x slower than Python, not 11.2x.
 - The wire sizes are not identical. The Rust JSON frame has a 56-byte larger
   header and the same payload size at the fixture scale. The IPC and zstd
   payloads differ because the Arrow implementations serialize the same logical

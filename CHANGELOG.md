@@ -12,6 +12,14 @@ Keep a Changelog, and the project uses semantic versioning.
 - Docker images, Compose services and a result driver under
   `bench/containers/`.
 
+### Changed
+
+- The JSON lane uses `orjson` with explicit datetime passthrough to preserve
+  the lane tags. The benchmark shows faster Python JSON encoding and decoding.
+- The benchmark Python image uses a glibc runtime and an explicit compatible
+  `orjson` wheel. The Alpine image was rejected because PyArrow on musl made
+  the IPC lanes much slower.
+
 ## 0.3.1 - 2026-10-29
 
 ### Changed

@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import base64
 import datetime as dt
-import json
 from decimal import Decimal
 from typing import Any
 
+import orjson
 import pyarrow as pa
 
 from ..errors import FrameError, OversizeFrame
@@ -80,8 +80,10 @@ class JsonLane:
         """Encode a table as NDJSON. `level` is ignored."""
         rows = table.to_pylist()
         payload = b"\n".join(
-            json.dumps(row, default=_default, separators=(",", ":"), ensure_ascii=False).encode(
-                "utf-8"
+            orjson.dumps(
+                row,
+                default=_default,
+                option=orjson.OPT_PASSTHROUGH_DATETIME,
             )
             for row in rows
         )
@@ -97,9 +99,8 @@ class JsonLane:
             raise OversizeFrame(f"payload {len(frame.payload)} exceeds {cap}")
         schema = schema_of(frame.header)
         try:
-            text = frame.payload.decode("utf-8")
-            rows = [json.loads(line) for line in text.splitlines() if line]
-        except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
+            rows = [orjson.loads(line) for line in frame.payload.splitlines() if line]
+        except (UnicodeDecodeError, orjson.JSONDecodeError, RecursionError) as exc:
             raise FrameError("payload is not valid NDJSON") from exc
         expected = {field.name for field in schema}
         for row in rows:
