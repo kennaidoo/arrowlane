@@ -29,6 +29,11 @@ coverage and the benchmark gate. macOS and Windows run the portable suite. The
 `/dev/shm` is used by default. The lane is ready when the directory exists and
 is writable.
 
+Python 3.15 on glibc Linux needs glibc 2.39 or newer. The CPython 3.15
+`orjson` wheels are manylinux 2.39. Debian bookworm has glibc 2.36 and must
+use Debian trixie or newer, or build `orjson` from source. Python 3.14 has
+older manylinux wheels and does not have this floor.
+
 ### macOS
 
 macOS has POSIX shared memory but no `/dev/shm`. Set `ARROWLAND_SHM_DIR` to a

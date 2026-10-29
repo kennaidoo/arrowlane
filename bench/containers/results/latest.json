@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "rows": 200000,
-  "repeats": 3,
+  "repeats": 5,
   "warmup_repeats": 1,
-  "measured_at": "2026-10-29T09:31:16+00:00",
+  "measured_at": "2026-10-29T11:53:24+00:00",
   "wire_delta_baseline": "python",
   "results": [
     {
@@ -11,72 +11,72 @@
       "lane": "json",
       "wire_bytes": 42505756,
       "wire_delta_bytes": 0,
-      "encode_ms": 2167.805,
-      "decode_ms": 2074.545
+      "encode_ms": 2128.138,
+      "decode_ms": 2062.808
     },
     {
       "impl": "python",
       "lane": "ipc",
       "wire_bytes": 12670845,
       "wire_delta_bytes": 0,
-      "encode_ms": 18.522,
-      "decode_ms": 3.354
+      "encode_ms": 20.367,
+      "decode_ms": 3.593
     },
     {
       "impl": "python",
       "lane": "ipc-zstd",
-      "wire_bytes": 1680124,
+      "wire_bytes": 1620041,
       "wire_delta_bytes": 0,
-      "encode_ms": 24.3,
-      "decode_ms": 21.325
+      "encode_ms": 28.866,
+      "decode_ms": 19.947
     },
     {
       "impl": "rust",
       "lane": "json",
       "wire_bytes": 42505812,
       "wire_delta_bytes": 56,
-      "encode_ms": 261.699,
-      "decode_ms": 1228.56
+      "encode_ms": 285.456,
+      "decode_ms": 1240.968
     },
     {
       "impl": "rust",
       "lane": "ipc",
       "wire_bytes": 12671117,
       "wire_delta_bytes": 272,
-      "encode_ms": 1.457,
-      "decode_ms": 2.598
+      "encode_ms": 1.867,
+      "decode_ms": 3.01
     },
     {
       "impl": "rust",
       "lane": "ipc-zstd",
       "wire_bytes": 1625309,
-      "wire_delta_bytes": -54815,
-      "encode_ms": 24.684,
-      "decode_ms": 10.031
+      "wire_delta_bytes": 5268,
+      "encode_ms": 28.816,
+      "decode_ms": 11.124
     },
     {
       "impl": "zig",
       "lane": "json",
       "wire_bytes": 42372426,
       "wire_delta_bytes": -133330,
-      "encode_ms": 182.791,
-      "decode_ms": 351.653
+      "encode_ms": 181.983,
+      "decode_ms": 328.907
     },
     {
       "impl": "zig",
       "lane": "ipc",
       "wire_bytes": 12670849,
       "wire_delta_bytes": 4,
-      "encode_ms": 45.149,
-      "decode_ms": 27.161
+      "encode_ms": 44.976,
+      "decode_ms": 25.996
     },
     {
       "impl": "zig",
       "lane": "ipc-zstd",
       "wire_bytes": 1620045,
-      "wire_delta_bytes": -60079,
-      "encode_ms": 61.658,
-      "decode_ms": 21.626
+      "wire_delta_bytes": 4,
+      "encode_ms": 60.151,
+      "decode_ms": 21.33
     }
   ]
 }

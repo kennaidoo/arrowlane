@@ -14,11 +14,11 @@ canonical eight-column fixture through each one.
 From the `arrowlane` repository root:
 
 ```bash
-./.venv/Scripts/python.exe bench/containers/run.py --rows 200000 --repeats 3
+./.venv/Scripts/python.exe bench/containers/run.py --rows 200000 --repeats 5
 ```
 
 The runner builds all three images, runs one warmup pass per implementation,
-then runs three measured repetitions. It writes:
+then runs five measured repetitions. It writes:
 
 - `bench/containers/results/bench-<timestamp>.json`
 - `bench/containers/results/latest.json`

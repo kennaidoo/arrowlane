@@ -167,6 +167,10 @@ directory. Windows cannot use the lane. The tested matrix, the lane table and
 the live check commands are in [docs/platforms.md](docs/platforms.md).
 Coverage is enforced on Linux, where the shared memory tests run.
 
+On glibc Linux, Python 3.15 needs glibc 2.39 or newer because `orjson`
+publishes manylinux 2.39 wheels for CPython 3.15. Use Debian trixie or
+newer, or build `orjson` from source.
+
 ## Status
 
 Alpha. The API may change.

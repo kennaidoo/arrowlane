@@ -17,9 +17,13 @@ Keep a Changelog, and the project uses semantic versioning.
 - The JSON lane uses a column-oriented encoder. Scalar tables serialize once
   and split into NDJSON. Nested columns and strings containing the split
   marker use the row fallback.
-- The benchmark Python image uses a glibc runtime and an explicit compatible
-  `orjson` wheel. The Alpine image was rejected because PyArrow on musl made
-  the IPC lanes much slower.
+- The Python 3.15 images use `python:3.15-slim-trixie`. Normal pip resolution
+  installs the CPython 3.15 manylinux 2.39 `orjson` wheel, so the manual
+  platform install is gone. The benchmark, demo app and demo client images
+  all use this base.
+- The Docker benchmark records five repeats. The Python `ipc-zstd` encode
+  regression on trixie is documented, and the old single-run 10 percent gate
+  is retired for that lane.
 
 ## 0.3.1 - 2026-10-29
 
