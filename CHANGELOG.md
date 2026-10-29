@@ -3,6 +3,15 @@
 All notable changes to this project are recorded here. The format follows
 Keep a Changelog, and the project uses semantic versioning.
 
+## Unreleased
+
+### Added
+
+- Containerized three-way benchmark for Python, Rust and Zig on the canonical
+  eight-column fixture at 200,000 rows.
+- Docker images, Compose services and a result driver under
+  `bench/containers/`.
+
 ## 0.3.1 - 2026-10-29
 
 ### Changed

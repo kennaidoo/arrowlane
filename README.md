@@ -120,6 +120,12 @@ python bench/calibrate.py --write
 python bench/verify.py
 ```
 
+## Docker benchmark
+
+The three implementations can be compared in Linux containers on the canonical
+fixture. See [docs/docker-benchmark.md](docs/docker-benchmark.md) and
+`bench/containers/README.md`.
+
 ## Demo
 
 ```bash

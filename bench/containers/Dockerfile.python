@@ -1,0 +1,19 @@
+FROM python:3.15-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY pyproject.toml README.md LICENSE llms.txt ./
+COPY docs/ai ./docs/ai
+COPY docs/platforms.md ./docs/platforms.md
+COPY src ./src
+COPY bench/containers/fixture.py bench/containers/python_bench.py /app/bench/containers/
+
+RUN pip install --no-cache-dir .
+
+RUN useradd --uid 65532 --no-create-home bench
+USER 65532
+
+ENTRYPOINT ["python", "/app/bench/containers/python_bench.py"]

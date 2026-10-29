@@ -7,3 +7,6 @@ __pycache__
 .ruff_cache
 bench/results.json
 demo/results.json
+bench/containers/results/
+demo/
+tests/

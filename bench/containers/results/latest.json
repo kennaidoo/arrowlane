@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "rows": 200000,
+  "repeats": 3,
+  "warmup_repeats": 1,
+  "measured_at": "2026-10-29T08:04:13+00:00",
+  "wire_delta_baseline": "python",
+  "results": [
+    {
+      "impl": "python",
+      "lane": "json",
+      "wire_bytes": 42505756,
+      "wire_delta_bytes": 0,
+      "encode_ms": 3111.63,
+      "decode_ms": 2624.323
+    },
+    {
+      "impl": "python",
+      "lane": "ipc",
+      "wire_bytes": 12670845,
+      "wire_delta_bytes": 0,
+      "encode_ms": 5.283,
+      "decode_ms": 3.331
+    },
+    {
+      "impl": "python",
+      "lane": "ipc-zstd",
+      "wire_bytes": 1680124,
+      "wire_delta_bytes": 0,
+      "encode_ms": 23.082,
+      "decode_ms": 15.948
+    },
+    {
+      "impl": "rust",
+      "lane": "json",
+      "wire_bytes": 42505812,
+      "wire_delta_bytes": 56,
+      "encode_ms": 228.862,
+      "decode_ms": 1034.057
+    },
+    {
+      "impl": "rust",
+      "lane": "ipc",
+      "wire_bytes": 12671117,
+      "wire_delta_bytes": 272,
+      "encode_ms": 1.812,
+      "decode_ms": 2.613
+    },
+    {
+      "impl": "rust",
+      "lane": "ipc-zstd",
+      "wire_bytes": 1625309,
+      "wire_delta_bytes": -54815,
+      "encode_ms": 24.052,
+      "decode_ms": 10.075
+    },
+    {
+      "impl": "zig",
+      "lane": "json",
+      "wire_bytes": 42372426,
+      "wire_delta_bytes": -133330,
+      "encode_ms": 173.382,
+      "decode_ms": 323.423
+    },
+    {
+      "impl": "zig",
+      "lane": "ipc",
+      "wire_bytes": 12670849,
+      "wire_delta_bytes": 4,
+      "encode_ms": 43.122,
+      "decode_ms": 24.621
+    },
+    {
+      "impl": "zig",
+      "lane": "ipc-zstd",
+      "wire_bytes": 1620045,
+      "wire_delta_bytes": -60079,
+      "encode_ms": 55.257,
+      "decode_ms": 179.177
+    }
+  ]
+}

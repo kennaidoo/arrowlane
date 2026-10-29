@@ -1,0 +1,50 @@
+name: arrowlane-bench
+
+services:
+  python:
+    image: arrowlane-bench-python:local
+    build:
+      context: ../..
+      dockerfile: bench/containers/Dockerfile.python
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 2g
+    cpus: 2
+
+  rust:
+    image: arrowlane-bench-rust:local
+    build:
+      context: ../../../arrowlane-rust
+      dockerfile: bench/Dockerfile
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 2g
+    cpus: 2
+
+  zig:
+    image: arrowlane-bench-zig:local
+    build:
+      context: ../../../arrowlane-zig
+      dockerfile: bench/Dockerfile
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 2g
+    cpus: 2
