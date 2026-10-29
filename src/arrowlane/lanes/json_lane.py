@@ -1,8 +1,9 @@
 """Typed NDJSON lane.
 
-This lane exists for compatibility and for the baseline measurement. It is not
-the fast path. Values that JSON cannot carry are tagged, so a roundtrip keeps
-timestamps, dates, times, decimals, binary and duration intact.
+This lane exists for compatibility and for the baseline measurement. Values
+that JSON cannot carry are tagged, so a roundtrip keeps timestamps, dates,
+times, decimals, binary and duration intact. The encoder is column-oriented
+and does not build one Python dict per row.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ import pyarrow as pa
 from ..errors import FrameError, OversizeFrame
 from ..frame import MAX_UNCOMPRESSED_BYTES, Frame, header_for, schema_of
 from .base import LaneInfo
+from .json_native import encode_table
 
 INFO = LaneInfo(id=1, name="json", media_type="application/x-ndjson")
 
@@ -78,15 +80,7 @@ class JsonLane:
 
     def encode(self, table: pa.Table, *, level: int | None = None) -> Frame:
         """Encode a table as NDJSON. `level` is ignored."""
-        rows = table.to_pylist()
-        payload = b"\n".join(
-            orjson.dumps(
-                row,
-                default=_default,
-                option=orjson.OPT_PASSTHROUGH_DATETIME,
-            )
-            for row in rows
-        )
+        payload = encode_table(table, default=_default)
         header = header_for(table, media_type=INFO.media_type)
         return Frame(INFO.id, payload, table.num_rows, len(payload), header)
 

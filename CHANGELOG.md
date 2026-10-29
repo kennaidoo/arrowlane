@@ -14,8 +14,9 @@ Keep a Changelog, and the project uses semantic versioning.
 
 ### Changed
 
-- The JSON lane uses `orjson` with explicit datetime passthrough to preserve
-  the lane tags. The benchmark shows faster Python JSON encoding and decoding.
+- The JSON lane uses a column-oriented encoder. Scalar tables serialize once
+  and split into NDJSON. Nested columns and strings containing the split
+  marker use the row fallback.
 - The benchmark Python image uses a glibc runtime and an explicit compatible
   `orjson` wheel. The Alpine image was rejected because PyArrow on musl made
   the IPC lanes much slower.
