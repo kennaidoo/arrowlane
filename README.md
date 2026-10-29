@@ -177,6 +177,12 @@ PyArrow has no `win_arm64` wheel, and the FreeBSD PyArrow port is version
 24.0.0 with Python 3.11 only. The Rust and Zig ports do not depend on PyArrow
 and have separate ARM64 support.
 
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for the process and [AGENTS.md](AGENTS.md)
+for the coding-agent commands. Report vulnerabilities through the private
+Security tab, not a public issue.
+
 ## Status
 
 Alpha. The API may change.
