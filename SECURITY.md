@@ -18,6 +18,6 @@ agreement.
 
 ## Scope
 
-This repository is a private demonstration. The demo binds to loopback, holds no
+This repository is a demonstration project. The demo binds to loopback, holds no
 production data, and uses documented demo credentials. Report a leaked real
 credential with the same private route.
