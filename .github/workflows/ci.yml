@@ -55,6 +55,23 @@ jobs:
         if: runner.os == 'Linux'
         run: uv run --no-sync python bench/verify.py
 
+  arm64-linux:
+    name: arm64-linux-py3.15
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.12.18"
+          enable-cache: true
+      - run: uv venv --python 3.15
+      - run: uv lock --check
+      - run: uv sync --frozen --extra dev --extra server
+      - run: uv run --no-sync pytest
+
   integrations:
     name: integrations-py3.15
     runs-on: ubuntu-latest
