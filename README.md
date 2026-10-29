@@ -171,6 +171,12 @@ On glibc Linux, Python 3.15 needs glibc 2.39 or newer because `orjson`
 publishes manylinux 2.39 wheels for CPython 3.15. Use Debian trixie or
 newer, or build `orjson` from source.
 
+Python supports Linux x86_64, Linux aarch64, macOS arm64 and Windows x86_64.
+Windows aarch64 and FreeBSD aarch64 are not supported by the Python package.
+PyArrow has no `win_arm64` wheel, and the FreeBSD PyArrow port is version
+24.0.0 with Python 3.11 only. The Rust and Zig ports do not depend on PyArrow
+and have separate ARM64 support.
+
 ## Status
 
 Alpha. The API may change.

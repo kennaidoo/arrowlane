@@ -24,6 +24,9 @@ Keep a Changelog, and the project uses semantic versioning.
 - The Docker benchmark records five repeats. The Python `ipc-zstd` encode
   regression on trixie is documented, and the old single-run 10 percent gate
   is retired for that lane.
+- Document Linux arm64 and Apple silicon support.
+- Document Windows arm64 and FreeBSD arm64 as unsupported for Python because
+  the PyArrow wheel and port versions do not match.
 
 ## 0.3.1 - 2026-10-29
 

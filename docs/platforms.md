@@ -4,12 +4,18 @@ arrowlane requires Python 3.14 or newer. The portable lanes run on Linux, macOS
 and Windows. The `shm` lane is a POSIX shared memory accelerator and is not
 available everywhere.
 
-## Tested matrix
+## Support matrix
 
-| Python | Linux | macOS | Windows |
-|---|---|---|---|
-| 3.14 | CI, unit tests | not run | not run |
-| 3.15 | CI, coverage, benchmark | CI, unit tests | CI, unit tests |
+| Host | Architecture | Python | Rust | Zig | Notes |
+|---|---|---|---|---|---|
+| Linux | x86_64 | Supported | Supported | Supported | Full `shm` lane |
+| Linux | aarch64 | Supported | Supported | Supported | PyArrow `manylinux_2_28_aarch64` or `musllinux_1_2_aarch64` |
+| macOS | arm64 Apple silicon | Supported | Supported | Supported | PyArrow `macosx_12_0_arm64`; `shm` needs `ARROWLAND_SHM_DIR` |
+| Windows | x86_64 | Supported | Supported | Supported | `shm` unavailable |
+| Windows | aarch64 | Unsupported | Build support | Build support | PyArrow has no `win_arm64` wheel |
+| FreeBSD 15 | aarch64 | Unsupported | Supported | Supported | PyArrow port is 24.0.0 and Python 3.11 only |
+
+Python support follows the PyArrow wheel matrix. The package cannot claim Windows ARM64 or FreeBSD ARM64 support while PyArrow does not publish a compatible wheel for those targets. The Rust and Zig ports do not depend on PyArrow and can be built on those targets.
 
 The CI matrix is in `.github/workflows/ci.yml`. Linux runs the full suite with
 coverage and the benchmark gate. macOS and Windows run the portable suite. The
