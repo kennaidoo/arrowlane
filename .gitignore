@@ -10,5 +10,7 @@ build/
 demo/results.json
 .coverage
 coverage.xml
+.hypothesis/
+.hermes/
 bench/results/
 .DS_Store
