@@ -17,16 +17,10 @@ Keep a Changelog, and the project uses semantic versioning.
 - The JSON lane uses a column-oriented encoder. Scalar tables serialize once
   and split into NDJSON. Nested columns and strings containing the split
   marker use the row fallback.
-- The Python 3.15 images use `python:3.15-slim-trixie`. Normal pip resolution
-  installs the CPython 3.15 manylinux 2.39 `orjson` wheel, so the manual
-  platform install is gone. The benchmark, demo app and demo client images
-  all use this base.
-- The Docker benchmark records five repeats. The Python `ipc-zstd` encode
-  regression on trixie is documented, and the old single-run 10 percent gate
-  is retired for that lane.
 - Document Linux arm64 and Apple silicon support.
 - Document Windows arm64 and FreeBSD arm64 as unsupported for Python because
   the PyArrow wheel and port versions do not match.
+- The security policy uses best-effort review without fixed-day targets.
 
 ## 0.3.1 - 2026-10-29
 

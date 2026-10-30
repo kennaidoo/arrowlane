@@ -14,7 +14,7 @@ canonical eight-column fixture through each one.
 From the `arrowlane` repository root:
 
 ```bash
-./.venv/Scripts/python.exe bench/containers/run.py --rows 200000 --repeats 5
+uv run python bench/containers/run.py --rows 200000 --repeats 5
 ```
 
 The runner builds all three images, runs one warmup pass per implementation,
@@ -49,5 +49,5 @@ all Linux capabilities dropped.
 ## Results
 
 The committed result is in `docs/docker-benchmark.md`. It is a container
-measurement on Linux x86_64. Do not compare it directly with the host
-measurements in `docs/performance.md`.
+measurement on Linux x86_64. Do not compare it directly with host measurements
+in the implementation-specific performance pages.
