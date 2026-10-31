@@ -5,18 +5,30 @@ Keep a Changelog, and the project uses semantic versioning.
 
 ## Unreleased
 
+## 0.4.0 - 2026-10-31
+
 ### Added
 
 - Containerized three-way benchmark for Python, Rust and Zig on the canonical
   eight-column fixture at 200,000 rows.
 - Docker images, Compose services and a result driver under
   `bench/containers/`.
+- `tests/test_dictionary_interop.py` reads a stream written by the C++ port when
+  `ARROWLANE_CPP_DICT` names it, and skips otherwise.
+- `tests/test_golden_payload.py` pins the 606 byte json payload that the C++ suite
+  also pins, so a dependency upgrade fails here first.
+- `docs/platforms.md` records why the checksum needs no arm64 work: `zlib.crc32`
+  already uses the ARM CRC32 instructions through the C library.
 
 ### Changed
 
-- The JSON lane uses a column-oriented encoder. Scalar tables serialize once
-  and split into NDJSON. Nested columns and strings containing the split
-  marker use the row fallback.
+- The JSON lane serialises the whole row list in one encoder call and splits the
+  outer array into NDJSON. Nested columns and strings containing the split marker
+  use the row fallback.
+- The `ipc` lane rejects a dictionary column outside the format subset: indices
+  must be int32, the dictionary must be unordered, and values must be utf8 or
+  binary. A frame that used to encode with an ordered dictionary or a wider index
+  now raises `FrameError`, which matches the C++ reader.
 - Document Linux arm64 and Apple silicon support.
 - Document Windows arm64 and FreeBSD arm64 as unsupported for Python because
   the PyArrow wheel and port versions do not match.
