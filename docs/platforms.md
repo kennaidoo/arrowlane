@@ -74,3 +74,13 @@ lists the lanes that this host can serve now.
 The Python floor is 3.14 because the package uses `compression.zstd` and
 `uuid.uuid7()` from the standard library. Lowering the floor would add a zstd
 dependency and a UUIDv7 shim. That is a separate decision.
+
+## The checksum on arm64
+
+`frame.py` computes the frame checksum with `zlib.crc32`. On aarch64 the C library
+maps that call onto the CRC32 instructions, so the checksum already runs at
+hardware speed on Graviton and on Apple silicon, with no code in this package.
+
+The C++ port cannot call the C library, so it carries its own kernels and needed
+a separate ARMv8 path to reach the same place. That is a fact about the port, not
+about this package. Do not port those kernels here.
