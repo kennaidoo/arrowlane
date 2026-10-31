@@ -14,7 +14,30 @@ from pathlib import Path
 import pyarrow as pa
 import pytest
 
-from arrowlane.lanes.ipc_lane import check_dictionary_policy, decode_ipc
+from arrowlane.frame import read_frame
+from arrowlane.lanes.ipc_lane import check_dictionary_policy, decode_ipc, IpcLane
+
+
+def _cpp_frame() -> Path:
+    configured = os.environ.get("ARROWLANE_CPP_FRAME")
+    if not configured:
+        pytest.skip("set ARROWLANE_CPP_FRAME to a frame written by pack --dictionary")
+    path = Path(configured)
+    if not path.exists():
+        pytest.skip(f"{path} does not exist")
+    return path
+
+
+def test_decodes_a_dictionary_frame_from_the_cpp_cli() -> None:
+    with _cpp_frame().open("rb") as stream:
+        frame = read_frame(stream)
+    assert frame is not None
+    table = IpcLane().decode(frame)
+    field = table.schema.field("merchant")
+    assert pa.types.is_dictionary(field.type)
+    assert not field.type.ordered
+    assert field.type.index_type == pa.int32()
+    assert table.column("merchant").to_pylist() == ["ozow", "payfast", "ozow"]
 
 
 def _cpp_stream() -> Path:
