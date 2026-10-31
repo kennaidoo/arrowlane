@@ -84,6 +84,17 @@ jobs:
       - run: uv lock --check
       - run: uv sync --frozen --extra dev --extra server
       - run: uv run --no-sync pytest
+      # The C++ port publishes a bench artifact from this same runner. This is the
+      # reference side of that comparison.
+      - name: Bench
+        run: >
+          uv run --no-sync python bench/containers/python_bench.py
+          --rows 200000 --repeats 5 | tee bench-arm64.txt
+      - name: Upload the numbers
+        uses: actions/upload-artifact@v7
+        with:
+          name: bench-arm64
+          path: bench-arm64.txt
 
   integrations:
     name: integrations-py3.15
