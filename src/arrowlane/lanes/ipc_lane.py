@@ -34,6 +34,31 @@ def decode_ipc(raw: bytes) -> pa.Table:
     return decode_ipc_buffer(pa.BufferReader(raw))
 
 
+def check_dictionary_policy(schema: pa.Schema) -> None:
+    """Reject a dictionary outside the subset frame format 1 defines.
+
+    int32 indices, unordered, utf8 or binary values. The C++ reader enforces the
+    same rule, so a frame outside it would be written here and refused there.
+    """
+    for field in schema:
+        kind = field.type
+        if not pa.types.is_dictionary(kind):
+            continue
+        if kind.ordered:
+            raise FrameError(f"field {field.name}: ordered dictionaries are not supported")
+        if not pa.types.is_int32(kind.index_type):
+            raise FrameError(
+                f"field {field.name}: dictionary index type must be int32, "
+                f"not {kind.index_type}"
+            )
+        if not (
+            pa.types.is_string(kind.value_type) or pa.types.is_binary(kind.value_type)
+        ):
+            raise FrameError(
+                f"field {field.name}: dictionary values must be utf8 or binary"
+            )
+
+
 def check_header_schema(frame: Frame, table: pa.Table) -> None:
     """Require the header schema and the payload schema to agree."""
     declared = schema_of(frame.header)
@@ -48,6 +73,7 @@ class IpcLane:
 
     def encode(self, table: pa.Table, *, level: int | None = None) -> Frame:
         """Encode without compression. `level` is ignored and kept for the protocol."""
+        check_dictionary_policy(table.schema)
         raw = encode_ipc(table)
         header = header_for(table, media_type=INFO.media_type)
         return Frame(INFO.id, raw, table.num_rows, len(raw), header)
@@ -60,5 +86,6 @@ class IpcLane:
         if len(frame.payload) > cap:
             raise OversizeFrame(f"payload {len(frame.payload)} exceeds {cap}")
         table = decode_ipc(frame.payload)
+        check_dictionary_policy(table.schema)
         check_header_schema(frame, table)
         return table
