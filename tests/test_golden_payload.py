@@ -28,7 +28,7 @@ GOLDEN = (
 
 def fixture_table() -> pa.Table:
     days = (datetime.date(2026, 1, 1) - datetime.date(1970, 1, 1)).days
-    stamp = datetime.datetime(2026, 10, 28, 12, 0, 0, tzinfo=datetime.timezone.utc)
+    stamp = datetime.datetime(2026, 10, 28, 12, 0, 0, tzinfo=datetime.UTC)
     micros = int(stamp.timestamp() * 1_000_000)
     return pa.table(
         {

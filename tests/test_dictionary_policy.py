@@ -16,10 +16,11 @@ from arrowlane.lanes.ipc_lane import IpcLane, encode_ipc
 
 
 def _dictionary_table(
-    index_type: pa.DataType = pa.int32(),
+    index_type: pa.DataType | None = None,
     ordered: bool = False,
     values: pa.Array | None = None,
 ) -> pa.Table:
+    index_type = pa.int32() if index_type is None else index_type
     dictionary = pa.array(["ozow", "payfast"] if values is None else values)
     indices = pa.array([0, 1, 0], type=index_type)
     kind = pa.dictionary(index_type, dictionary.type, ordered=ordered)

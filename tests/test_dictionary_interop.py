@@ -15,7 +15,7 @@ import pyarrow as pa
 import pytest
 
 from arrowlane.frame import read_frame
-from arrowlane.lanes.ipc_lane import check_dictionary_policy, decode_ipc, IpcLane
+from arrowlane.lanes.ipc_lane import IpcLane, check_dictionary_policy, decode_ipc
 
 
 def _cpp_frame() -> Path:
