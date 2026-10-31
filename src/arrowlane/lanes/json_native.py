@@ -8,8 +8,13 @@ Nested columns and unsafe strings use the per-row fallback.
 
 The fast path builds one dict per row through Table.to_pylist. That call is about
 sixty percent of the encode cost at 200,000 rows, so this module is row-oriented
-in practice, and a column-oriented encoder that writes from Arrow buffers is the
-open optimisation here.
+in practice.
+
+A column-oriented encoder was written and measured on 2026-10-31. It produced
+identical bytes and took 4,475 ms against 2,338 ms for this path, because
+materialising each column and joining one bytes object per field costs more than
+letting orjson walk the row list. It was reverted. Do not write it again without
+a vectorised formatter that avoids the per-field concatenation.
 """
 
 from __future__ import annotations
