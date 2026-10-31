@@ -37,9 +37,7 @@ def fixture_table() -> pa.Table:
             "score": pa.array([0.0, 1.0 / 3.0, 2.0 / 3.0], type=pa.float64()),
             "ok": pa.array([True, False, True]),
             "day": pa.array([days, days + 1, days + 2], type=pa.date32()),
-            "amount": pa.array(["12.34"] * 3, type=pa.string()).cast(
-                pa.decimal128(9, 2)
-            ),
+            "amount": pa.array(["12.34"] * 3, type=pa.string()).cast(pa.decimal128(9, 2)),
             "ts": pa.array([micros] * 3, type=pa.timestamp("us", tz="UTC")),
             "blob": pa.array([b"\x00\x01\x02"] * 3, type=pa.binary()),
         }

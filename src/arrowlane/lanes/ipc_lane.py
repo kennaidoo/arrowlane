@@ -48,15 +48,10 @@ def check_dictionary_policy(schema: pa.Schema) -> None:
             raise FrameError(f"field {field.name}: ordered dictionaries are not supported")
         if not pa.types.is_int32(kind.index_type):
             raise FrameError(
-                f"field {field.name}: dictionary index type must be int32, "
-                f"not {kind.index_type}"
+                f"field {field.name}: dictionary index type must be int32, not {kind.index_type}"
             )
-        if not (
-            pa.types.is_string(kind.value_type) or pa.types.is_binary(kind.value_type)
-        ):
-            raise FrameError(
-                f"field {field.name}: dictionary values must be utf8 or binary"
-            )
+        if not (pa.types.is_string(kind.value_type) or pa.types.is_binary(kind.value_type)):
+            raise FrameError(f"field {field.name}: dictionary values must be utf8 or binary")
 
 
 def check_header_schema(frame: Frame, table: pa.Table) -> None:
