@@ -1,9 +1,15 @@
-"""Column-oriented NDJSON encoder for the JSON lane.
+"""NDJSON encoder for the JSON lane.
 
-The fast path serializes the row list once, then splits the outer JSON array
-into NDJSON. It is used only when every field is a scalar and no top-level
-string contains the split marker. Nested columns and unsafe strings use the
-per-row fallback.
+The fast path serializes the whole row list in one orjson call with
+OPT_PASSTHROUGH_DATETIME, so dates, times and timestamps reach the default hook
+and are tagged, then splits the outer JSON array into NDJSON. It is used only
+when every field is a scalar and no top-level string contains the split marker.
+Nested columns and unsafe strings use the per-row fallback.
+
+The fast path builds one dict per row through Table.to_pylist. That call is about
+sixty percent of the encode cost at 200,000 rows, so this module is row-oriented
+in practice, and a column-oriented encoder that writes from Arrow buffers is the
+open optimisation here.
 """
 
 from __future__ import annotations
@@ -66,7 +72,7 @@ def _encode_rows(table: pa.Table, *, default: _DEFAULT) -> bytes:
 
 
 def encode_table(table: pa.Table, *, default: _DEFAULT) -> bytes:
-    """Encode a table as NDJSON without calling the JSON encoder per row."""
+    """Encode a table as NDJSON in one encoder call, then split it into lines."""
     rows = table.num_rows
     if rows == 0:
         return b""
