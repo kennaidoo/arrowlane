@@ -24,3 +24,18 @@ Read CONTRIBUTING.md before changing code.
 - `docs/ai/operating-guide.md` for the full development guide.
 - `docs/ai/manifest.json`, `docs/ai/quickstart.md` and `docs/ai/api.md` for the public contract.
 - `llms.txt` for the short retrieval entry point.
+
+## Cross-repository check
+
+The Python package and the C++ port must agree on bytes. The C++ test writes a
+dictionary stream, and the Python test reads it:
+
+    # in arrowlane-cpp, build and test everything
+    scripts/gate.cmd
+
+    # in arrowlane, point at the fixture the C++ test wrote
+    ARROWLANE_CPP_DICT=<path to arrowlane-cpp>/build/dict_cpp.arrows \
+      uv run --no-sync pytest tests/test_dictionary_interop.py -q
+
+Expected: `1 passed`, not `1 skipped`. A skip means the environment variable did
+not reach the test, so the check did not run.
